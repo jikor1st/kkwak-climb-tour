@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { auth } from '@/lib/auth/auth'
 import { createServerClient } from '@/lib/supabase/server'
-import { formatHHMM } from '@/lib/contest/schedule'
+import { buildTimeline, formatHHMM } from '@/lib/contest/schedule'
+import { CurrentScheduleStatus } from '@/components/CurrentScheduleStatus'
 
 export const dynamic = 'force-dynamic'
 
@@ -49,15 +50,58 @@ export default async function LandingPage({
   const showForbidden = error === 'forbidden'
 
   const supabase = createServerClient()
-  const { data: cs } = await supabase
-    .from('contest_settings')
-    .select('contest_date, start_time, end_time')
-    .eq('id', 1)
-    .maybeSingle()
+  const [csRes, partsCountRes, paidCountRes, gymsRes, durRes] =
+    await Promise.all([
+      supabase
+        .from('contest_settings')
+        .select(
+          'contest_date, start_time, end_time, default_gym_minutes, lunch_minutes, lunch_start_time',
+        )
+        .eq('id', 1)
+        .maybeSingle(),
+      supabase
+        .from('participants')
+        .select('id', { count: 'exact', head: true }),
+      supabase
+        .from('participants')
+        .select('id', { count: 'exact', head: true })
+        .eq('paid', true),
+      supabase
+        .from('gyms')
+        .select('id, name, display_order')
+        .eq('active', true)
+        .order('display_order'),
+      supabase.from('gym_durations').select('gym_id, duration_minutes'),
+    ])
 
+  const cs = csRes.data
   const contestDate = cs?.contest_date ?? null
   const startLabel = formatHHMM(cs?.start_time ?? null)
   const endLabel = formatHHMM(cs?.end_time ?? null)
+  const participantCount = partsCountRes.count ?? 0
+  const paidCount = paidCountRes.count ?? 0
+
+  const defaultMinutes = cs?.default_gym_minutes ?? 45
+  const durMap = new Map(
+    (durRes.data ?? []).map((d) => [d.gym_id, d.duration_minutes]),
+  )
+  const timelineGyms = (gymsRes.data ?? []).map((g) => ({
+    id: g.id,
+    name: g.name,
+    display_order: g.display_order,
+    duration_minutes: durMap.get(g.id) ?? defaultMinutes,
+  }))
+  const timeline = buildTimeline(
+    {
+      start_time: cs?.start_time ?? null,
+      end_time: cs?.end_time ?? null,
+      default_gym_minutes: defaultMinutes,
+      lunch_minutes: cs?.lunch_minutes ?? 60,
+      lunch_start_time: cs?.lunch_start_time ?? null,
+      contest_date: contestDate,
+    },
+    timelineGyms,
+  )
   const dateBadge = formatDateBadge(contestDate)
   const dateBig = formatDateBig(contestDate)
   const dateSub =
@@ -98,9 +142,22 @@ export default async function LandingPage({
       {/* Hero */}
       <section className="hero-bg px-5 pt-12 pb-16 sm:pt-20 sm:pb-24">
         <div className="max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent-soft border border-accent/20 mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-            <span className="text-xs text-accent font-bold tracking-wider">{dateBadge}</span>
+          <div className="flex items-center gap-2 mb-6 flex-wrap">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent-soft border border-accent/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+              <span className="text-xs text-accent font-bold tracking-wider">{dateBadge}</span>
+            </div>
+            {participantCount > 0 && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface border border-line">
+                <span className="w-1.5 h-1.5 rounded-full bg-grade-green" />
+                <span className="text-xs font-bold text-ink-700 tracking-wider">
+                  현재 <strong className="text-ink-900 num">{participantCount}</strong>명 신청
+                  {paidCount > 0 && (
+                    <span className="text-ink-500 num"> · 입금 {paidCount}</span>
+                  )}
+                </span>
+              </div>
+            )}
           </div>
 
           <h1 className="text-[40px] leading-[1.1] sm:text-6xl sm:leading-[1.05] font-black tracking-tight">
@@ -115,7 +172,10 @@ export default async function LandingPage({
           <div className="mt-8">
             <div className="text-xs text-ink-500 mb-3 font-bold tracking-wider">VENUES</div>
             <div className="flex flex-wrap gap-2">
-              {['신사', '논현', '강남', '양재', '사당', '이수'].map((venue) => (
+              {(timelineGyms.length > 0
+                ? timelineGyms.map((g) => g.name)
+                : ['신사', '논현', '강남', '양재', '사당', '이수']
+              ).map((venue) => (
                 <span key={venue} className="px-3.5 py-2 rounded-lg bg-surface border border-line text-sm font-bold shadow-soft">
                   {venue}
                 </span>
@@ -123,7 +183,14 @@ export default async function LandingPage({
             </div>
           </div>
 
-          <div className="mt-10 flex flex-col sm:flex-row gap-3">
+          <div className="mt-8">
+            <CurrentScheduleStatus
+              timeline={timeline}
+              contestDate={contestDate}
+            />
+          </div>
+
+          <div className="mt-2 flex flex-col sm:flex-row gap-3">
             <Link href={primaryCta.href} className="px-7 py-4 bg-accent hover:bg-accent/90 transition rounded-xl font-bold text-white text-base shadow-pop text-center">
               {primaryCta.label}
             </Link>

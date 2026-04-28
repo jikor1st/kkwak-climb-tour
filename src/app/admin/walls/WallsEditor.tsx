@@ -4,7 +4,13 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { TextInputDialog } from "@/components/TextInputDialog"
 import { ConfirmDialog } from "@/components/ConfirmDialog"
 
-type Gym = { id: string; name: string; display_order: number }
+type Gym = {
+  id: string
+  name: string
+  display_order: number
+  active: boolean
+  pending?: boolean
+}
 type Wall = {
   id: string
   gym_id: string
@@ -24,7 +30,7 @@ const GRADES = [
 type SaveState = "idle" | "saving" | "saved" | "error"
 
 export function WallsEditor({
-  gyms,
+  gyms: initialGyms,
   walls: initialWalls,
   gradeCounts: initialCounts,
 }: {
@@ -32,6 +38,7 @@ export function WallsEditor({
   walls: Wall[]
   gradeCounts: GradeCount[]
 }) {
+  const [gyms, setGyms] = useState<Gym[]>(initialGyms)
   const [walls, setWalls] = useState<Wall[]>(initialWalls)
   const [counts, setCounts] = useState<Record<string, number>>(() => {
     const init: Record<string, number> = {}
@@ -43,6 +50,8 @@ export function WallsEditor({
   const [savedAt, setSavedAt] = useState<Date | null>(null)
   const [addingForGymId, setAddingForGymId] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Wall | null>(null)
+  const [addingGym, setAddingGym] = useState(false)
+  const [deleteGymTarget, setDeleteGymTarget] = useState<Gym | null>(null)
   const debounceRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
   const inflightRef = useRef(0)
 
@@ -164,6 +173,84 @@ export function WallsEditor({
     persistCount(wallId, grade, v)
   }
 
+  async function addGymWithName(name: string) {
+    flagSaving()
+    try {
+      const res = await fetch("/api/admin/gyms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "생성 실패")
+      setGyms((gs) => [...gs, data.gym])
+      flagDone(true)
+    } catch (err) {
+      flagDone(false, err instanceof Error ? err.message : "생성 실패")
+    }
+  }
+
+  function persistGymRename(gymId: string, name: string) {
+    const key = `gym-name:${gymId}`
+    const existing = debounceRef.current.get(key)
+    if (existing) clearTimeout(existing)
+    const t = setTimeout(async () => {
+      flagSaving()
+      try {
+        const res = await fetch(`/api/admin/gyms/${gymId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || "수정 실패")
+        flagDone(true)
+      } catch (err) {
+        flagDone(false, err instanceof Error ? err.message : "수정 실패")
+      }
+    }, 500)
+    debounceRef.current.set(key, t)
+  }
+
+  function renameGym(gymId: string, name: string) {
+    setGyms((gs) => gs.map((g) => (g.id === gymId ? { ...g, name } : g)))
+    if (name.trim()) persistGymRename(gymId, name.trim())
+  }
+
+  async function toggleGymActive(gym: Gym) {
+    const next = !gym.active
+    setGyms((gs) => gs.map((g) => (g.id === gym.id ? { ...g, active: next } : g)))
+    flagSaving()
+    try {
+      const res = await fetch(`/api/admin/gyms/${gym.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active: next }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "수정 실패")
+      flagDone(true)
+    } catch (err) {
+      setGyms((gs) =>
+        gs.map((g) => (g.id === gym.id ? { ...g, active: !next } : g)),
+      )
+      flagDone(false, err instanceof Error ? err.message : "수정 실패")
+    }
+  }
+
+  async function deleteGymConfirmed(gym: Gym) {
+    flagSaving()
+    try {
+      const res = await fetch(`/api/admin/gyms/${gym.id}`, { method: "DELETE" })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || "삭제 실패")
+      setGyms((gs) => gs.filter((g) => g.id !== gym.id))
+      flagDone(true)
+    } catch (err) {
+      flagDone(false, err instanceof Error ? err.message : "삭제 실패")
+    }
+  }
+
   async function deleteWallConfirmed(wall: Wall) {
     flagSaving()
     try {
@@ -220,27 +307,58 @@ export function WallsEditor({
           return (
             <section
               key={gym.id}
-              className="bg-surface border border-line rounded-3xl shadow-soft overflow-hidden"
+              className={`bg-surface border rounded-3xl shadow-soft overflow-hidden ${
+                gym.active ? "border-line" : "border-line-strong opacity-60"
+              }`}
             >
-              <header className="flex items-center justify-between gap-3 px-5 py-4 border-b border-line bg-mute/40">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-ink-900 text-white flex items-center justify-center text-xs font-black">
-                    {idx + 1}
-                  </div>
-                  <div>
-                    <div className="font-black text-base">{gym.name}점</div>
-                    <div className="text-[11px] text-ink-500 font-bold">
-                      {list.length}벽 · 총 {gymTotal}개
-                    </div>
+              <header className="flex items-center gap-3 px-5 py-4 border-b border-line bg-mute/40 flex-wrap">
+                <div className="w-8 h-8 rounded-lg bg-ink-900 text-white flex items-center justify-center text-xs font-black shrink-0">
+                  {idx + 1}
+                </div>
+                <div className="flex-1 min-w-35">
+                  <input
+                    type="text"
+                    value={gym.name}
+                    onChange={(e) => renameGym(gym.id, e.target.value)}
+                    placeholder="지점명"
+                    className="w-full max-w-45 px-2.5 py-1.5 bg-transparent focus:bg-surface border border-transparent focus:border-ink-900 rounded-lg outline-none text-base font-black transition"
+                  />
+                  <div className="text-[11px] text-ink-500 font-bold mt-0.5 ml-2.5">
+                    {list.length}벽 · 총 {gymTotal}개
+                    {!gym.active && (
+                      <span className="ml-2 text-accent">· 비활성</span>
+                    )}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setAddingForGymId(gym.id)}
-                  className="px-3 py-2 rounded-lg bg-accent hover:bg-accent/90 text-white text-xs font-black shadow-pop transition active:scale-95"
-                >
-                  + 벽 추가
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => toggleGymActive(gym)}
+                    className={`px-2.5 py-1.5 rounded-lg text-[11px] font-black transition ${
+                      gym.active
+                        ? "bg-mute text-ink-700 hover:bg-line"
+                        : "bg-grade-green/10 text-grade-green hover:bg-grade-green/20"
+                    }`}
+                  >
+                    {gym.active ? "비활성" : "활성"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteGymTarget(gym)}
+                    className="w-8 h-8 rounded-lg text-ink-300 hover:text-accent hover:bg-accent-soft flex items-center justify-center transition"
+                    aria-label="지점 삭제"
+                    title="지점 삭제 (벽이 0개일 때만)"
+                  >
+                    ✕
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAddingForGymId(gym.id)}
+                    className="px-3 py-2 rounded-lg bg-accent hover:bg-accent/90 text-white text-xs font-black shadow-pop transition active:scale-95"
+                  >
+                    + 벽 추가
+                  </button>
+                </div>
               </header>
 
               {list.length === 0 ? (
@@ -291,10 +409,54 @@ export function WallsEditor({
         })}
       </div>
 
-      <p className="mt-8 text-xs text-ink-500 text-center">
+      <button
+        type="button"
+        onClick={() => setAddingGym(true)}
+        className="mt-4 w-full py-4 rounded-2xl bg-surface border-2 border-dashed border-line hover:border-accent hover:bg-accent-soft text-sm font-black text-ink-700 hover:text-accent transition"
+      >
+        + 지점 추가
+      </button>
+
+      <p className="mt-6 text-xs text-ink-500 text-center">
         모든 변경사항은 자동 저장됩니다. 입력 후 다른 곳을 클릭하거나 잠시
         기다리면 저장돼요.
       </p>
+
+      <TextInputDialog
+        open={addingGym}
+        title="새 지점 추가"
+        subtitle="신사·논현 같은 지점 이름을 입력하세요"
+        placeholder="예: 잠실"
+        confirmLabel="추가"
+        onConfirm={(name) => {
+          setAddingGym(false)
+          addGymWithName(name)
+        }}
+        onCancel={() => setAddingGym(false)}
+      />
+
+      <ConfirmDialog
+        open={deleteGymTarget !== null}
+        title="지점을 완전 삭제할까요?"
+        variant="danger"
+        confirmLabel="완전 삭제"
+        message={
+          deleteGymTarget ? (
+            <>
+              <strong className="text-ink-900">{deleteGymTarget.name}</strong>{" "}
+              지점을 영구 삭제합니다. 등록된 벽이 있으면 거부돼요. 보통은{" "}
+              <strong className="text-ink-900">비활성</strong>으로 전환하시는
+              것을 권장합니다.
+            </>
+          ) : null
+        }
+        onConfirm={() => {
+          const g = deleteGymTarget
+          setDeleteGymTarget(null)
+          if (g) deleteGymConfirmed(g)
+        }}
+        onCancel={() => setDeleteGymTarget(null)}
+      />
 
       <TextInputDialog
         open={addingForGymId !== null}

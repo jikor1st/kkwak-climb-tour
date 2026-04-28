@@ -49,6 +49,7 @@ export async function loadContestData(
       supabase
         .from("gyms")
         .select("id, name, display_order")
+        .eq("active", true)
         .order("display_order"),
       supabase
         .from("walls")

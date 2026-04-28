@@ -16,7 +16,11 @@ export default async function AdminSchedulePage() {
       )
       .eq("id", 1)
       .maybeSingle(),
-    supabase.from("gyms").select("id, name, display_order").order("display_order"),
+    supabase
+      .from("gyms")
+      .select("id, name, display_order")
+      .eq("active", true)
+      .order("display_order"),
     supabase
       .from("gym_durations")
       .select("gym_id, duration_minutes"),

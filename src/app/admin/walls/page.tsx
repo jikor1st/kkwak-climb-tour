@@ -9,7 +9,10 @@ export default async function AdminWallsPage() {
   const supabase = createServerClient()
 
   const [gymsRes, wallsRes, gcRes] = await Promise.all([
-    supabase.from("gyms").select("id, name, display_order").order("display_order"),
+    supabase
+      .from("gyms")
+      .select("id, name, display_order, active")
+      .order("display_order"),
     supabase
       .from("walls")
       .select("id, gym_id, name, display_order, active")
