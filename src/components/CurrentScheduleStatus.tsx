@@ -69,9 +69,7 @@ export function CurrentScheduleStatus({ timeline, contestDate }: Props) {
         </div>
         <div className="text-xs text-ink-700">
           첫 일정 ·{" "}
-          <strong className="text-ink-900">
-            {status.firstStop.type === "gym" ? status.firstStop.name : "점심"}
-          </strong>{" "}
+          <strong className="text-ink-900">{status.firstStop.name}</strong>{" "}
           <span className="num">{status.firstStop.start}</span>
         </div>
       </Wrap>
@@ -95,16 +93,16 @@ export function CurrentScheduleStatus({ timeline, contestDate }: Props) {
   }
 
   // active
-  const isLunch = status.stop.type === "lunch"
+  const isBreak = status.stop.type === "break"
   const totalMin = status.elapsedMin + status.remainingMin
   const progress = totalMin > 0 ? Math.round((status.elapsedMin / totalMin) * 100) : 0
   const next = status.next
 
   return (
-    <Wrap kind={isLunch ? "lunch" : "active"}>
+    <Wrap kind={isBreak ? "break" : "active"}>
       <div className="flex items-center justify-between mb-2">
         <div className="text-[10px] font-black uppercase tracking-wider opacity-90">
-          {isLunch ? "점심시간" : "지금 있어야 할 곳"}
+          {isBreak ? "쉬는 시간" : "지금 있어야 할 곳"}
         </div>
         <div className="text-[10px] font-black opacity-80 num">
           {status.stop.start} – {status.stop.end}
@@ -112,7 +110,7 @@ export function CurrentScheduleStatus({ timeline, contestDate }: Props) {
       </div>
       <div className="flex items-end justify-between gap-3 mb-3">
         <div className="text-3xl sm:text-4xl font-black leading-none">
-          {isLunch ? "점심" : status.stop.type === "gym" ? status.stop.name : ""}
+          {status.stop.name}
         </div>
         <div className="text-right">
           <div className="text-[11px] opacity-80 font-bold">남은 시간</div>
@@ -130,9 +128,7 @@ export function CurrentScheduleStatus({ timeline, contestDate }: Props) {
       {next && (
         <div className="text-[11px] opacity-90 flex items-center gap-1.5">
           <span>다음:</span>
-          <strong className="font-black">
-            {next.type === "gym" ? next.name : "점심"}
-          </strong>
+          <strong className="font-black">{next.name}</strong>
           <span className="num">{next.start}</span>
         </div>
       )}
@@ -144,13 +140,13 @@ function Wrap({
   kind,
   children,
 }: {
-  kind: "active" | "lunch" | "info" | "muted"
+  kind: "active" | "break" | "info" | "muted"
   children: React.ReactNode
 }) {
   const cls =
     kind === "active"
       ? "bg-accent text-white shadow-pop border-transparent"
-      : kind === "lunch"
+      : kind === "break"
         ? "bg-ink-900 text-white shadow-pop border-transparent"
         : kind === "info"
           ? "bg-surface border-line"

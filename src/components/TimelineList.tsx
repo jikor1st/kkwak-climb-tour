@@ -52,13 +52,13 @@ export function TimelineList({
       {timeline.stops.map((stop, idx) => {
         const isActive = idx === activeIndex
         const isPast = activeIndex !== -1 && idx < activeIndex
-        const isLunch = stop.type === "lunch"
+        const isBreak = stop.type === "break"
 
         const baseCls = "flex items-center gap-3 p-3 rounded-xl border transition"
         let cls: string
         if (isActive) {
           cls = `${baseCls} bg-accent border-accent text-white shadow-pop`
-        } else if (isLunch) {
+        } else if (isBreak) {
           cls = `${baseCls} bg-accent-soft border-accent/20 ${isPast ? "opacity-50" : ""}`
         } else {
           cls = `${baseCls} bg-surface border-line ${isPast ? "opacity-50" : ""}`
@@ -66,25 +66,26 @@ export function TimelineList({
 
         const timeColor = isActive
           ? "text-white opacity-90"
-          : isLunch
+          : isBreak
             ? "text-accent"
             : "text-ink-500"
         const labelColor = isActive ? "text-white" : "text-ink-900"
         const durColor = isActive
           ? "text-white opacity-80"
-          : isLunch
+          : isBreak
             ? "text-ink-700"
             : "text-ink-500"
 
+        const key = stop.type === "gym" ? stop.gymId : stop.breakId
         return (
-          <li key={isLunch ? `lunch-${idx}` : stop.gymId} className={cls}>
+          <li key={key} className={cls}>
             <span
               className={`text-[10px] font-black uppercase tracking-wider w-12 shrink-0 num ${timeColor}`}
             >
               {stop.start}
             </span>
             <div className={`flex-1 font-black text-sm ${labelColor}`}>
-              {isLunch ? "점심" : stop.name}
+              {stop.name}
               {isActive && (
                 <span className="ml-1.5 text-[10px] font-black uppercase opacity-90">
                   · 진행 중

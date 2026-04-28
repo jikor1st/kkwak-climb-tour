@@ -14,6 +14,14 @@ export type ScheduleGym = {
   duration_minutes: number
 }
 
+export type ScheduleBreak = {
+  id: string
+  name: string
+  duration_minutes: number
+  after_gym_id: string | null
+  display_order: number
+}
+
 export type TimelineGymStop = {
   type: "gym"
   gymId: string
@@ -23,14 +31,16 @@ export type TimelineGymStop = {
   durationMinutes: number
 }
 
-export type TimelineLunchStop = {
-  type: "lunch"
+export type TimelineBreakStop = {
+  type: "break"
+  breakId: string
+  name: string
   start: string
   end: string
   durationMinutes: number
 }
 
-export type TimelineStop = TimelineGymStop | TimelineLunchStop
+export type TimelineStop = TimelineGymStop | TimelineBreakStop
 
 export type Timeline = {
   startLabel: string | null
@@ -54,18 +64,17 @@ function toMinutes(hhmm: string | null | undefined): number | null {
 
 function fromMinutes(total: number): string {
   const h = Math.floor(total / 60) % 24
-  const m = total % 60
+  const m = ((total % 60) + 60) % 60
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
 }
 
 export function buildTimeline(
   settings: ScheduleSettings,
   gyms: ScheduleGym[],
+  breaks: ScheduleBreak[] = [],
 ): Timeline {
   const startMin = toMinutes(settings.start_time)
   const endMin = toMinutes(settings.end_time)
-  const lunchStartMin = toMinutes(settings.lunch_start_time)
-  const lunchMinutes = settings.lunch_minutes ?? 0
 
   const startLabel = startMin != null ? fromMinutes(startMin) : null
   const endLabel = endMin != null ? fromMinutes(endMin) : null
@@ -80,29 +89,40 @@ export function buildTimeline(
     }
   }
 
-  const ordered = [...gyms].sort((a, b) => a.display_order - b.display_order)
+  const orderedGyms = [...gyms].sort((a, b) => a.display_order - b.display_order)
+  const breaksByAfter = new Map<string, ScheduleBreak[]>()
+  for (const b of breaks) {
+    const key = b.after_gym_id ?? "__start__"
+    const list = breaksByAfter.get(key) ?? []
+    list.push(b)
+    breaksByAfter.set(key, list)
+  }
+  for (const list of breaksByAfter.values()) {
+    list.sort((a, b) => a.display_order - b.display_order)
+  }
+
   const stops: TimelineStop[] = []
   let cursor = startMin
-  let lunchInserted = false
 
-  for (const gym of ordered) {
-    if (
-      !lunchInserted &&
-      lunchStartMin != null &&
-      lunchMinutes > 0 &&
-      cursor >= lunchStartMin
-    ) {
-      const lunchStart = Math.max(cursor, lunchStartMin)
+  function flushBreaks(key: string) {
+    const list = breaksByAfter.get(key) ?? []
+    for (const b of list) {
+      const stopStart = cursor
+      cursor = stopStart + b.duration_minutes
       stops.push({
-        type: "lunch",
-        start: fromMinutes(lunchStart),
-        end: fromMinutes(lunchStart + lunchMinutes),
-        durationMinutes: lunchMinutes,
+        type: "break",
+        breakId: b.id,
+        name: b.name,
+        start: fromMinutes(stopStart),
+        end: fromMinutes(cursor),
+        durationMinutes: b.duration_minutes,
       })
-      cursor = lunchStart + lunchMinutes
-      lunchInserted = true
     }
+  }
 
+  flushBreaks("__start__")
+
+  for (const gym of orderedGyms) {
     const duration =
       gym.duration_minutes && gym.duration_minutes > 0
         ? gym.duration_minutes
@@ -117,6 +137,7 @@ export function buildTimeline(
       end: fromMinutes(cursor),
       durationMinutes: duration,
     })
+    flushBreaks(gym.id)
   }
 
   return {

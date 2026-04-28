@@ -1,5 +1,6 @@
 import { createServerClient } from "@/lib/supabase/server"
 import { CATEGORY_TO_GRADE, type Category, type SolveGrade } from "./grades"
+import type { ScheduleBreak } from "./schedule"
 
 export type WallData = {
   id: string
@@ -30,6 +31,7 @@ export type ContestSettings = {
 
 export type ContestData = {
   gyms: GymData[]
+  breaks: ScheduleBreak[]
   totalSolved: number
   totalCount: number
   completionRate: number
@@ -44,7 +46,7 @@ export async function loadContestData(
   const supabase = createServerClient()
   const grade = CATEGORY_TO_GRADE[category]
 
-  const [gymsRes, wallsRes, gcRes, solvesRes, durRes, settingsRes] =
+  const [gymsRes, wallsRes, gcRes, solvesRes, durRes, settingsRes, breaksRes] =
     await Promise.all([
       supabase
         .from("gyms")
@@ -75,6 +77,10 @@ export async function loadContestData(
         )
         .eq("id", 1)
         .maybeSingle(),
+      supabase
+        .from("schedule_breaks")
+        .select("id, name, duration_minutes, after_gym_id, display_order")
+        .order("display_order"),
     ])
 
   const gyms = gymsRes.data ?? []
@@ -129,8 +135,17 @@ export async function loadContestData(
   const completionRate =
     totalCount > 0 ? Math.round((totalSolved / totalCount) * 100) : 0
 
+  const breaks: ScheduleBreak[] = (breaksRes.data ?? []).map((b) => ({
+    id: b.id,
+    name: b.name,
+    duration_minutes: b.duration_minutes,
+    after_gym_id: b.after_gym_id ?? null,
+    display_order: b.display_order ?? 0,
+  }))
+
   return {
     gyms: gymsData,
+    breaks,
     totalSolved,
     totalCount,
     completionRate,

@@ -8,7 +8,7 @@ export default async function AdminSchedulePage() {
   await requireAdmin()
   const supabase = createServerClient()
 
-  const [settingsRes, gymsRes, durRes] = await Promise.all([
+  const [settingsRes, gymsRes, durRes, breaksRes] = await Promise.all([
     supabase
       .from("contest_settings")
       .select(
@@ -24,6 +24,10 @@ export default async function AdminSchedulePage() {
     supabase
       .from("gym_durations")
       .select("gym_id, duration_minutes"),
+    supabase
+      .from("schedule_breaks")
+      .select("id, name, duration_minutes, after_gym_id, display_order")
+      .order("display_order"),
   ])
 
   const row = settingsRes.data
@@ -44,5 +48,13 @@ export default async function AdminSchedulePage() {
     duration_minutes: durMap.get(g.id) ?? settings.default_gym_minutes,
   }))
 
-  return <ScheduleEditor settings={settings} gyms={gyms} />
+  const breaks = (breaksRes.data ?? []).map((b) => ({
+    id: b.id,
+    name: b.name,
+    duration_minutes: b.duration_minutes,
+    after_gym_id: b.after_gym_id ?? null,
+    display_order: b.display_order ?? 0,
+  }))
+
+  return <ScheduleEditor settings={settings} gyms={gyms} breaks={breaks} />
 }

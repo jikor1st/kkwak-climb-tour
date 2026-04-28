@@ -30,6 +30,7 @@ export default async function DashboardPage() {
       display_order: g.display_order,
       duration_minutes: g.duration_minutes,
     })),
+    contest.breaks,
   )
   const contestDateLabel = formatContestDate(contest.settings.contest_date)
   const startEndLabel =

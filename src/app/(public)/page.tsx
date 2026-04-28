@@ -50,7 +50,7 @@ export default async function LandingPage({
   const showForbidden = error === 'forbidden'
 
   const supabase = createServerClient()
-  const [csRes, partsCountRes, paidCountRes, gymsRes, durRes] =
+  const [csRes, partsCountRes, paidCountRes, gymsRes, durRes, breaksRes] =
     await Promise.all([
       supabase
         .from('contest_settings')
@@ -72,6 +72,10 @@ export default async function LandingPage({
         .eq('active', true)
         .order('display_order'),
       supabase.from('gym_durations').select('gym_id, duration_minutes'),
+      supabase
+        .from('schedule_breaks')
+        .select('id, name, duration_minutes, after_gym_id, display_order')
+        .order('display_order'),
     ])
 
   const cs = csRes.data
@@ -91,6 +95,13 @@ export default async function LandingPage({
     display_order: g.display_order,
     duration_minutes: durMap.get(g.id) ?? defaultMinutes,
   }))
+  const breaks = (breaksRes.data ?? []).map((b) => ({
+    id: b.id,
+    name: b.name,
+    duration_minutes: b.duration_minutes,
+    after_gym_id: b.after_gym_id ?? null,
+    display_order: b.display_order ?? 0,
+  }))
   const timeline = buildTimeline(
     {
       start_time: cs?.start_time ?? null,
@@ -101,6 +112,7 @@ export default async function LandingPage({
       contest_date: contestDate,
     },
     timelineGyms,
+    breaks,
   )
   const dateBadge = formatDateBadge(contestDate)
   const dateBig = formatDateBig(contestDate)
