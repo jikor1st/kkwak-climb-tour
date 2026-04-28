@@ -1,0 +1,27 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="512" height="512" rx="102" fill="#DC2626"/>
+
+  <!-- Mountain/Climbing Hold Shape -->
+  <g transform="translate(256, 256)">
+    <!-- Main climbing hold -->
+    <path d="M -120 40 L -80 -60 L -20 -80 L 40 -70 L 100 -40 L 120 20 L 80 80 L -40 90 L -100 70 Z"
+          fill="white"
+          opacity="0.95"/>
+
+    <!-- Inner detail -->
+    <circle cx="0" cy="0" r="35" fill="#DC2626" opacity="0.3"/>
+
+    <!-- Grip texture dots -->
+    <circle cx="-30" cy="-20" r="8" fill="#DC2626" opacity="0.2"/>
+    <circle cx="30" cy="-15" r="8" fill="#DC2626" opacity="0.2"/>
+    <circle cx="0" cy="25" r="8" fill="#DC2626" opacity="0.2"/>
+    <circle cx="-45" cy="15" r="6" fill="#DC2626" opacity="0.15"/>
+    <circle cx="45" cy="20" r="6" fill="#DC2626" opacity="0.15"/>
+  </g>
+
+  <!-- Text at bottom -->
+  <text x="256" y="420" font-family="Arial, sans-serif" font-size="42" font-weight="bold" fill="white" text-anchor="middle">
+    KKWAK CREW
+  </text>
+</svg>

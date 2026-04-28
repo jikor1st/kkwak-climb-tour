@@ -1,26 +1,114 @@
-@import "tailwindcss";
+@import "tailwindcss" source("../");
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-paper: #fafaf7;
+  --color-surface: #ffffff;
+  --color-mute: #f4f2ed;
+
+  --color-ink-900: #0a0a0a;
+  --color-ink-700: #3f3f3f;
+  --color-ink-500: #6b6b6b;
+  --color-ink-300: #a1a1a1;
+
+  --color-line: #e7e4dd;
+  --color-line-strong: #d4d0c7;
+
+  --color-accent: #dc2626;
+  --color-accent-soft: #fee2e2;
+
+  --color-grade-white: #ffffff;
+  --color-grade-yellow: #eab308;
+  --color-grade-orange: #ea580c;
+  --color-grade-green: #16a34a;
+  --color-grade-blue: #2563eb;
+  --color-grade-red: #dc2626;
+  --color-grade-pink: #db2777;
+  --color-grade-purple: #9333ea;
+  --color-grade-gray: #6b7280;
+
+  --font-sans: Pretendard, -apple-system, BlinkMacSystemFont, system-ui,
+    sans-serif;
+
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04);
+  --shadow-pop: 0 4px 12px rgba(220, 38, 38, 0.15),
+    0 8px 24px rgba(220, 38, 38, 0.1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    font-family: var(--font-sans);
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink-900);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  p,
+  li {
+    line-height: 1.7;
+  }
+
+  ::selection {
+    background-color: var(--color-accent-soft);
+    color: var(--color-accent);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  .num {
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .hero-bg {
+    background: radial-gradient(
+        ellipse 80% 60% at 50% 0%,
+        rgba(220, 38, 38, 0.08),
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 60% 50% at 100% 100%,
+        rgba(219, 39, 119, 0.06),
+        transparent 70%
+      ),
+      var(--color-paper);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .grade-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 11px;
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 700;
+    border: 1.5px solid;
+  }
+
+  .grade-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 9999px;
+    flex-shrink: 0;
+  }
 }

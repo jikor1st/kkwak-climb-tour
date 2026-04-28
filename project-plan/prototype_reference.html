@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#FAFAF7" />
+<title>THE CLIMB GANGNAM TOUR 2026</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          paper: '#FAFAF7',
+          surface: '#FFFFFF',
+          mute: '#F4F2ED',
+          ink: { 900: '#0A0A0A', 700: '#3F3F3F', 500: '#6B6B6B', 300: '#A1A1A1' },
+          line: '#E7E4DD',
+          lineStrong: '#D4D0C7',
+          accent: '#DC2626',
+          accentSoft: '#FEE2E2',
+          grade: {
+            white: '#FFFFFF', yellow: '#EAB308', orange: '#EA580C', green: '#16A34A',
+            blue: '#2563EB', red: '#DC2626', pink: '#DB2777', purple: '#9333EA', gray: '#6B7280'
+          }
+        },
+        fontFamily: {
+          sans: ['Pretendard', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+        }
+      }
+    }
+  }
+</script>
+<style>
+  html { -webkit-text-size-adjust: 100%; }
+  body { 
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    background: #FAFAF7;
+    color: #0A0A0A;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.6;
+  }
+  p, li { line-height: 1.7; }
+  
+  .grade-dot { display: inline-block; width: 10px; height: 10px; border-radius: 9999px; flex-shrink: 0; }
+  .grade-dot-lg { width: 16px; height: 16px; }
+  .grade-dot-xl { width: 24px; height: 24px; }
+  
+  .grade-pill { 
+    display: inline-flex; align-items: center; gap: 6px; 
+    padding: 5px 11px; border-radius: 9999px; 
+    font-size: 13px; font-weight: 700;
+    border: 1.5px solid;
+  }
+  .pill-purple { color: #9333EA; border-color: #9333EA; background: #FAF5FF; }
+  .pill-pink { color: #DB2777; border-color: #DB2777; background: #FDF2F8; }
+  .pill-red { color: #DC2626; border-color: #DC2626; background: #FEF2F2; }
+  .pill-blue { color: #2563EB; border-color: #2563EB; background: #EFF6FF; }
+  .pill-green { color: #16A34A; border-color: #16A34A; background: #F0FDF4; }
+  
+  .num { font-feature-settings: "tnum"; font-variant-numeric: tabular-nums; }
+  
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  
+  .screen { display: none; }
+  .screen.active { display: block; }
+  
+  button:active { transform: scale(0.96); transition: transform 0.06s; }
+  
+  .shadow-soft { box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06); }
+  .shadow-card { box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04); }
+  .shadow-pop { box-shadow: 0 4px 12px rgba(220,38,38,0.15), 0 8px 24px rgba(220,38,38,0.10); }
+  
+  .hero-bg {
+    background: 
+      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(220,38,38,0.08), transparent 70%),
+      radial-gradient(ellipse 60% 50% at 100% 100%, rgba(219,39,119,0.06), transparent 70%),
+      #FAFAF7;
+  }
+  
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0); }
+  
+  .map-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 12px;
+    border-radius: 12px;
+  }
+  @media (min-width: 480px) {
+    .map-row { gap: 16px; padding: 16px; }
+  }
+  .map-arrow { color: #A1A1A1; font-weight: 700; font-size: 16px; }
+</style>
+</head>
+<body>
+
+<nav class="fixed top-0 left-0 right-0 z-50 bg-paper/95 backdrop-blur-md border-b border-line">
+  <div class="max-w-5xl mx-auto px-4 py-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+    <span class="text-[10px] uppercase tracking-wider text-ink-500 mr-1 shrink-0 font-bold">PROTOTYPE</span>
+    <button onclick="showScreen('landing')" class="nav-btn shrink-0 px-3 py-1.5 text-xs rounded-full transition" data-screen="landing">① 랜딩</button>
+    <button onclick="showScreen('signup')" class="nav-btn shrink-0 px-3 py-1.5 text-xs rounded-full transition" data-screen="signup">② 신청</button>
+    <button onclick="showScreen('input')" class="nav-btn shrink-0 px-3 py-1.5 text-xs rounded-full transition" data-screen="input">③ 풀이 기록</button>
+    <button onclick="showScreen('dashboard')" class="nav-btn shrink-0 px-3 py-1.5 text-xs rounded-full transition" data-screen="dashboard">④ 대시보드</button>
+  </div>
+</nav>
+<div class="pt-12"></div>
+
+
+<!-- ============================================ ① 랜딩 ============================================ -->
+<section id="screen-landing" class="screen active">
+
+  <div class="hero-bg">
+    <div class="max-w-3xl mx-auto px-5 pt-10 pb-14 sm:pt-16 sm:pb-20">
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accentSoft border border-accent/20 mb-6">
+        <span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-xs text-accent font-bold tracking-wider">2026.05.10 SAT</span>
+      </div>
+      
+      <h1 class="text-[40px] leading-[1.1] sm:text-6xl sm:leading-[1.05] font-black tracking-tight">
+        강남 6개 지점,<br/>
+        <span class="text-accent">하루 안에</span> 정주행.
+      </h1>
+      <p class="mt-5 text-base sm:text-lg text-ink-700 max-w-xl">
+        평소 실력보다 살짝 쉬운 색을 정한 시간 안에 누가 더 많이 풀 수 있을까?
+      </p>
+      
+      <div class="mt-8">
+        <div class="text-xs text-ink-500 mb-3 font-bold tracking-wider">VENUES</div>
+        <div class="flex flex-wrap gap-2">
+          <span class="px-3.5 py-2 rounded-lg bg-surface border border-line text-sm font-bold shadow-soft">신사</span>
+          <span class="px-3.5 py-2 rounded-lg bg-surface border border-line text-sm font-bold shadow-soft">논현</span>
+          <span class="px-3.5 py-2 rounded-lg bg-surface border border-line text-sm font-bold shadow-soft">강남</span>
+          <span class="px-3.5 py-2 rounded-lg bg-surface border border-line text-sm font-bold shadow-soft">양재</span>
+          <span class="px-3.5 py-2 rounded-lg bg-surface border border-line text-sm font-bold shadow-soft">사당</span>
+          <span class="px-3.5 py-2 rounded-lg bg-surface border border-line text-sm font-bold shadow-soft">이수</span>
+        </div>
+      </div>
+
+      <div class="mt-10 flex flex-col sm:flex-row gap-3">
+        <button onclick="showScreen('signup')" class="px-7 py-4 bg-accent hover:bg-accent/90 transition rounded-xl font-bold text-white text-base shadow-pop">
+          참가 신청하기
+        </button>
+        <a href="#rules" class="px-7 py-4 bg-surface border border-line hover:border-lineStrong transition rounded-xl font-bold text-ink-900 text-base text-center">
+          규칙 보기
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 한 줄 룰 -->
+  <div class="max-w-3xl mx-auto px-5 py-12 sm:py-14">
+    <div class="bg-surface border border-line rounded-3xl p-6 sm:p-8 shadow-card">
+      <div class="text-xs text-accent uppercase tracking-wider mb-3 font-black">REGULATION</div>
+      <h2 class="text-2xl sm:text-3xl font-black mb-7 leading-tight">대회 룰, 한 줄.</h2>
+      
+      <div class="bg-mute rounded-2xl p-5 sm:p-6 mb-6">
+        <p class="text-base sm:text-lg font-bold text-ink-900 leading-relaxed">
+          평소 푸는 색보다 <span class="text-accent">살짝 쉬운 색</span>을<br/>
+          정해진 시간 안에 <span class="text-accent">누가 더 많이</span> 푸느냐
+        </p>
+      </div>
+
+      <div class="space-y-4">
+        <div class="flex gap-3">
+          <div class="shrink-0 w-7 h-7 rounded-full bg-ink-900 text-white font-black flex items-center justify-center text-xs">1</div>
+          <p class="text-sm sm:text-base text-ink-700 leading-relaxed pt-0.5">
+            <strong class="text-ink-900">6개 지점을 다 같이</strong> 한 곳씩 차례로 돕니다.
+          </p>
+        </div>
+        <div class="flex gap-3">
+          <div class="shrink-0 w-7 h-7 rounded-full bg-ink-900 text-white font-black flex items-center justify-center text-xs">2</div>
+          <p class="text-sm sm:text-base text-ink-700 leading-relaxed pt-0.5">
+            각 지점에서 <strong class="text-ink-900">정해진 색</strong>을 풀어 갯수를 기록합니다.
+          </p>
+        </div>
+        <div class="flex gap-3">
+          <div class="shrink-0 w-7 h-7 rounded-full bg-ink-900 text-white font-black flex items-center justify-center text-xs">3</div>
+          <p class="text-sm sm:text-base text-ink-700 leading-relaxed pt-0.5">
+            <strong class="text-ink-900">완등 비율</strong>이 가장 높은 사람이 카테고리별로 1등.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 핵심 정보 -->
+  <div class="max-w-3xl mx-auto px-5 pb-12 sm:pb-14">
+    <div class="grid grid-cols-2 gap-3">
+      <div class="bg-surface border border-line rounded-2xl p-5 shadow-soft">
+        <div class="text-xs text-ink-500 uppercase tracking-wider mb-2 font-bold">일시</div>
+        <div class="text-xl font-black">5월 10일</div>
+        <div class="text-sm text-ink-700 mt-1">일 09:30~16:50</div>
+      </div>
+      <div class="bg-surface border border-line rounded-2xl p-5 shadow-soft">
+        <div class="text-xs text-ink-500 uppercase tracking-wider mb-2 font-bold">참가비</div>
+        <div class="text-xl font-black num">10,000원</div>
+        <div class="text-sm text-ink-700 mt-1">크루·게스트 동일</div>
+      </div>
+      <div class="bg-surface border border-line rounded-2xl p-5 shadow-soft">
+        <div class="text-xs text-ink-500 uppercase tracking-wider mb-2 font-bold">시상</div>
+        <div class="text-xl font-black">3명</div>
+        <div class="text-sm text-ink-700 mt-1">상급·중급·초급 각 1</div>
+      </div>
+      <div class="bg-surface border border-line rounded-2xl p-5 shadow-soft">
+        <div class="text-xs text-ink-500 uppercase tracking-wider mb-2 font-bold">채점</div>
+        <div class="text-xl font-black">완등 비율</div>
+        <div class="text-sm text-ink-700 mt-1">양심 기록</div>
+      </div>
+    </div>
+
+    <!-- 참가 자격 강조 박스 -->
+    <div class="mt-3 bg-surface border-2 border-accent rounded-2xl p-5 shadow-soft">
+      <div class="flex items-start gap-3">
+        <div class="shrink-0 w-9 h-9 rounded-full bg-accent text-white flex items-center justify-center text-base font-black">!</div>
+        <div class="flex-1">
+          <div class="text-xs text-accent uppercase tracking-wider mb-1.5 font-black">필독 · 참가 자격</div>
+          <div class="font-black text-base sm:text-lg mb-2 leading-tight">
+            <span class="text-accent">횟수권 / 개월권</span> 보유자만 참가할 수 있어요
+          </div>
+          <p class="text-sm text-ink-700 leading-relaxed">
+            <strong class="text-ink-900">일일권은 하루에 한 지점만</strong> 이용 가능해서 6개 지점을 다 도는 이 대회는 참가가 불가능해요. 신청 전에 본인 이용권을 꼭 확인해주세요.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 매핑 표 -->
+  <div id="rules" class="max-w-3xl mx-auto px-5 py-12 sm:py-14">
+    <div class="text-xs text-accent uppercase tracking-wider mb-3 font-black">FIND YOUR LEVEL</div>
+    <h2 class="text-3xl sm:text-4xl font-black mb-3 leading-tight">나는 어디로?</h2>
+    <p class="text-ink-700 mb-7 text-base">평소 본인이 푸는 색을 기준으로 카테고리가 정해져요.</p>
+
+    <div class="bg-surface border border-line rounded-3xl p-3 sm:p-5 shadow-card">
+      <div class="grid grid-cols-[1fr_auto_1fr_auto] gap-2 sm:gap-4 px-3 pb-3 mb-1 border-b border-line text-[11px] sm:text-xs text-ink-500 font-bold tracking-wider">
+        <div>평소 푸는 색</div>
+        <div></div>
+        <div>대회에서 풀 색</div>
+        <div class="text-right">조</div>
+      </div>
+
+      <div class="map-row hover:bg-mute transition">
+        <div><span class="grade-pill pill-purple"><span class="grade-dot" style="background: #9333EA;"></span>보라</span></div>
+        <div class="map-arrow">→</div>
+        <div><span class="grade-pill pill-red"><span class="grade-dot" style="background: #DC2626;"></span>빨강</span></div>
+        <div class="text-right text-sm font-black">상급</div>
+      </div>
+
+      <div class="map-row hover:bg-mute transition">
+        <div><span class="grade-pill pill-pink"><span class="grade-dot" style="background: #DB2777;"></span>핑크</span></div>
+        <div class="map-arrow">→</div>
+        <div><span class="grade-pill pill-red"><span class="grade-dot" style="background: #DC2626;"></span>빨강</span></div>
+        <div class="text-right text-sm font-black">상급</div>
+      </div>
+
+      <div class="map-row hover:bg-mute transition">
+        <div><span class="grade-pill pill-pink"><span class="grade-dot" style="background: #DB2777;"></span>핑크</span></div>
+        <div class="map-arrow">→</div>
+        <div><span class="grade-pill pill-blue"><span class="grade-dot" style="background: #2563EB;"></span>파랑</span></div>
+        <div class="text-right text-sm font-black">중급</div>
+      </div>
+
+      <div class="map-row hover:bg-mute transition">
+        <div><span class="grade-pill pill-red"><span class="grade-dot" style="background: #DC2626;"></span>빨강</span></div>
+        <div class="map-arrow">→</div>
+        <div><span class="grade-pill pill-blue"><span class="grade-dot" style="background: #2563EB;"></span>파랑</span></div>
+        <div class="text-right text-sm font-black">중급</div>
+      </div>
+
+      <div class="map-row hover:bg-mute transition">
+        <div><span class="grade-pill pill-red"><span class="grade-dot" style="background: #DC2626;"></span>빨강</span></div>
+        <div class="map-arrow">→</div>
+        <div><span class="grade-pill pill-green"><span class="grade-dot" style="background: #16A34A;"></span>초록</span></div>
+        <div class="text-right text-sm font-black">초급</div>
+      </div>
+    </div>
+
+    <p class="text-xs text-ink-500 mt-3 px-1">예: 평소 보라를 푸시면 → 대회에서는 빨강을 풀게 됩니다 (상급조)</p>
+
+    <!-- 시상 구조 안내 -->
+    <div class="mt-5 bg-surface border border-line rounded-2xl p-5 shadow-soft">
+      <div class="text-xs text-accent uppercase tracking-wider mb-3 font-black">PRIZES</div>
+      <div class="font-black text-base mb-3">시상은 이렇게 나뉘어요</div>
+      <div class="space-y-2.5">
+        <!-- 상급조 1등 -->
+        <!-- 상급조 1등 -->
+        <div class="flex items-center gap-3 p-3.5 bg-mute rounded-xl">
+          <span class="grade-pill pill-red shrink-0">
+            <span class="grade-dot" style="background: #DC2626;"></span>
+            상급
+          </span>
+          <div class="flex-1">
+            <div class="font-black text-sm">상급조 1등 · 1명</div>
+            <div class="text-xs text-ink-700 mt-0.5">빨강 풀이 비율 1위</div>
+          </div>
+        </div>
+        <!-- 중급조 1등 -->
+        <div class="flex items-center gap-3 p-3.5 bg-mute rounded-xl">
+          <span class="grade-pill pill-blue shrink-0">
+            <span class="grade-dot" style="background: #2563EB;"></span>
+            중급
+          </span>
+          <div class="flex-1">
+            <div class="font-black text-sm">중급조 1등 · 1명</div>
+            <div class="text-xs text-ink-700 mt-0.5">파랑 풀이 비율 1위</div>
+          </div>
+        </div>
+        <!-- 초급조 1등 -->
+        <div class="flex items-center gap-3 p-3.5 bg-mute rounded-xl">
+          <span class="grade-pill pill-green shrink-0">
+            <span class="grade-dot" style="background: #16A34A;"></span>
+            초급
+          </span>
+          <div class="flex-1">
+            <div class="font-black text-sm">초급조 1등 · 1명</div>
+            <div class="text-xs text-ink-700 mt-0.5">초록 풀이 비율 1위</div>
+          </div>
+        </div>
+      </div>
+      <p class="text-xs text-ink-500 mt-3 leading-relaxed">
+        💡 채점은 <strong class="text-ink-700">완등 비율(푼 갯수 / 전체 갯수)</strong>로 하기 때문에 부문이 달라도 공정하게 비교돼요. 상금은 참가비 전액을 3등분해 각 부문 1등에게 배분합니다.
+      </p>
+    </div>
+
+    <!-- 카테고리 선택 가이드 -->
+    <div class="mt-6 bg-surface border border-line rounded-2xl p-5 shadow-soft">
+      <div class="font-black text-base mb-3">⚖️ 카테고리는 본인 양심껏 선택해주세요</div>
+      <p class="text-sm text-ink-700 leading-relaxed mb-4">같은 색을 평소에 푼다고 해도 사람마다 체감 난이도가 다를 수 있어요. 더 쉬운 카테고리를 선택해서 비율로 유리해지는 걸 막기 위해 본인의 진짜 실력에 맞춰 정직하게 선택해주세요.</p>
+      <div class="space-y-2 text-xs sm:text-sm">
+        <div class="flex gap-2">
+          <span class="font-black shrink-0" style="color: #DC2626;">상급 (빨강 풀이)</span>
+          <span class="text-ink-700">빨강이 평소 무난하다면</span>
+        </div>
+        <div class="flex gap-2">
+          <span class="font-black shrink-0" style="color: #2563EB;">중급 (파랑 풀이)</span>
+          <span class="text-ink-700">파랑이 평소 무난하다면</span>
+        </div>
+        <div class="flex gap-2">
+          <span class="font-black shrink-0" style="color: #16A34A;">초급 (초록 풀이)</span>
+          <span class="text-ink-700">파랑도 6개 지점 다 돌기 힘들 것 같다면</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 핑크 가이드 -->
+    <div class="mt-6 bg-surface border-2 rounded-2xl p-5 shadow-soft" style="border-color: #DB2777;">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="grade-pill pill-pink">
+          <span class="grade-dot" style="background: #DB2777;"></span>
+          핑크
+        </span>
+        <span class="font-black text-sm">평소 핑크를 푸시는 분들께</span>
+      </div>
+      <p class="text-sm text-ink-700 mb-4">상급 / 중급 둘 중 하나를 직접 고를 수 있어요.</p>
+      <div class="space-y-2.5">
+        <div class="bg-mute rounded-xl p-4">
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="grade-dot" style="background: #DC2626;"></span>
+            <span class="font-black text-sm" style="color: #DC2626;">상급으로 가세요 (빨강 풀이)</span>
+          </div>
+          <p class="text-sm text-ink-700">여러 지점에서 빨강을 한 세션에 <strong class="text-ink-900">절반 이상</strong> 풀 수 있다면.</p>
+        </div>
+        <div class="bg-mute rounded-xl p-4">
+          <div class="flex items-center gap-2 mb-1.5">
+            <span class="grade-dot" style="background: #2563EB;"></span>
+            <span class="font-black text-sm" style="color: #2563EB;">중급으로 가세요 (파랑 풀이)</span>
+          </div>
+          <p class="text-sm text-ink-700">빨강이 <strong class="text-ink-900">지점 따라 갈리면</strong>. 어떤 곳은 풀고, 어떤 곳은 못 풀고.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 평소 푸는 색 정의 -->
+    <div class="mt-5 bg-mute rounded-2xl p-5 sm:p-6">
+      <div class="flex items-start gap-3">
+        <div class="shrink-0 w-8 h-8 rounded-full bg-ink-900 text-white flex items-center justify-center text-sm font-black">?</div>
+        <div>
+          <div class="font-black mb-2 text-base">"평소 푸는 색" 어떻게 정해요?</div>
+          <p class="text-sm sm:text-base text-ink-700 leading-relaxed">
+            <strong class="text-ink-900">최근 두 달, 두 군데 이상 지점</strong>에서 풀어본 적 있는 가장 높은 색이에요.
+          </p>
+          <p class="text-sm text-ink-500 mt-2 leading-relaxed">
+            지점마다 난이도가 좀 달라서, 한 지점에서 운으로 한두 번 푼 건 빼고 봐요.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 채점 -->
+  <div class="max-w-3xl mx-auto px-5 py-12 sm:py-14">
+    <div class="text-xs text-accent uppercase tracking-wider mb-3 font-black">SCORING</div>
+    <h2 class="text-3xl sm:text-4xl font-black mb-3 leading-tight">완등 비율로 채점</h2>
+    <p class="text-ink-700 mb-7">시간 안에 더 많이 푼 사람이 이깁니다.</p>
+
+    <div class="bg-surface border border-line rounded-3xl p-6 sm:p-8 shadow-card">
+      <div class="grid grid-cols-3 gap-2 sm:gap-4 text-center">
+        <div>
+          <div class="text-[10px] sm:text-xs text-ink-500 uppercase tracking-wider mb-2 font-bold leading-tight">푼 갯수</div>
+          <div class="text-3xl sm:text-5xl font-black text-accent num">27</div>
+        </div>
+        <div class="flex items-center justify-center pt-6">
+          <span class="text-2xl sm:text-4xl text-ink-300 font-light">/</span>
+        </div>
+        <div>
+          <div class="text-[10px] sm:text-xs text-ink-500 uppercase tracking-wider mb-2 font-bold leading-tight">전체 갯수</div>
+          <div class="text-3xl sm:text-5xl font-black num">90</div>
+        </div>
+      </div>
+      <div class="my-6 h-px bg-line"></div>
+      <div class="text-center">
+        <div class="text-xs text-ink-500 uppercase tracking-wider mb-2 font-bold">최종 점수</div>
+        <div class="text-5xl sm:text-7xl font-black text-accent num">30%</div>
+      </div>
+      <div class="mt-6 pt-6 border-t border-line text-center text-sm text-ink-700">
+        <strong class="text-ink-900">상급 1등</strong> · <strong class="text-ink-900">중급 1등</strong> · <strong class="text-ink-900">초급 1등</strong> 각 시상 · 동률은 공동 1등
+      </div>
+    </div>
+  </div>
+
+  <!-- 타임라인 -->
+  <div class="max-w-3xl mx-auto px-5 py-12 sm:py-14">
+    <div class="text-xs text-accent uppercase tracking-wider mb-3 font-black">TIMELINE</div>
+    <h2 class="text-3xl sm:text-4xl font-black mb-3 leading-tight">하루 흐름</h2>
+    <p class="text-ink-700 mb-7"><strong class="text-ink-900">모두 같은 시간, 같은 지점에서 시작</strong>해 한 곳씩 함께 이동해요.</p>
+
+    <div class="space-y-2">
+      <div class="flex items-stretch gap-3">
+        <div class="w-16 sm:w-20 shrink-0 text-right pt-3"><div class="text-sm font-black num">09:30</div></div>
+        <div class="relative">
+          <div class="w-3 h-3 rounded-full bg-accent ring-4 ring-accentSoft mt-4"></div>
+          <div class="absolute top-7 left-1/2 -translate-x-1/2 w-0.5 h-full bg-line"></div>
+        </div>
+        <div class="flex-1 pb-3">
+          <div class="bg-surface border border-line rounded-xl p-4 shadow-soft">
+            <div class="font-black">신사 출발</div>
+            <div class="text-sm text-ink-500 mt-0.5">45분</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-stretch gap-3">
+        <div class="w-16 sm:w-20 shrink-0 text-right pt-3"><div class="text-sm font-black num text-ink-500">10:25</div></div>
+        <div class="relative">
+          <div class="w-3 h-3 rounded-full bg-ink-300 mt-4"></div>
+          <div class="absolute top-7 left-1/2 -translate-x-1/2 w-0.5 h-full bg-line"></div>
+        </div>
+        <div class="flex-1 pb-3">
+          <div class="bg-surface border border-line rounded-xl p-4 shadow-soft">
+            <div class="font-black">논현</div>
+            <div class="text-sm text-ink-500 mt-0.5">45분</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-stretch gap-3">
+        <div class="w-16 sm:w-20 shrink-0 text-right pt-3"><div class="text-sm font-black num text-ink-500">11:25</div></div>
+        <div class="relative">
+          <div class="w-3 h-3 rounded-full bg-ink-300 mt-4"></div>
+          <div class="absolute top-7 left-1/2 -translate-x-1/2 w-0.5 h-full bg-line"></div>
+        </div>
+        <div class="flex-1 pb-3">
+          <div class="bg-surface border border-line rounded-xl p-4 shadow-soft">
+            <div class="font-black">강남</div>
+            <div class="text-sm text-ink-500 mt-0.5">45분</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-stretch gap-3">
+        <div class="w-16 sm:w-20 shrink-0 text-right pt-3"><div class="text-sm font-black num" style="color: #EAB308;">12:30</div></div>
+        <div class="relative">
+          <div class="w-3 h-3 rounded-full mt-4" style="background: #EAB308;"></div>
+          <div class="absolute top-7 left-1/2 -translate-x-1/2 w-0.5 h-full bg-line"></div>
+        </div>
+        <div class="flex-1 pb-3">
+          <div class="rounded-xl p-4" style="background: #FEFCE8; border: 1px solid #FDE68A;">
+            <div class="font-black" style="color: #A16207;">점심 휴식</div>
+            <div class="text-sm mt-0.5" style="color: #854D0E;">60분 · 강남역 인근</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-stretch gap-3">
+        <div class="w-16 sm:w-20 shrink-0 text-right pt-3"><div class="text-sm font-black num text-ink-500">13:30</div></div>
+        <div class="relative">
+          <div class="w-3 h-3 rounded-full bg-ink-300 mt-4"></div>
+          <div class="absolute top-7 left-1/2 -translate-x-1/2 w-0.5 h-full bg-line"></div>
+        </div>
+        <div class="flex-1 pb-3">
+          <div class="bg-surface border border-line rounded-xl p-4 shadow-soft">
+            <div class="font-black">양재 → 사당 → 이수</div>
+            <div class="text-sm text-ink-500 mt-0.5">각 45분 + 이동</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-stretch gap-3">
+        <div class="w-16 sm:w-20 shrink-0 text-right pt-3"><div class="text-sm font-black num text-accent">16:50</div></div>
+        <div class="relative"><div class="w-3 h-3 rounded-full bg-accent ring-4 ring-accentSoft mt-4"></div></div>
+        <div class="flex-1 pb-3">
+          <div class="rounded-xl p-4" style="background: #FEE2E2; border: 1px solid #FECACA;">
+            <div class="font-black text-accent">대회 종료 · 기록 마감</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6 bg-mute rounded-xl p-4 text-sm text-ink-700">
+      <strong class="text-ink-900">팀 안내</strong> · 같은 지점 안에서 팀별로 시작 벽이 달라요. 한 벽에 사람이 몰리지 않게 하려는 배려예요.
+    </div>
+    <div class="mt-2 bg-mute rounded-xl p-4 text-sm text-ink-700">
+      💡 지점별 시간은 당일 혼잡도에 따라 조정될 수 있어요.
+    </div>
+  </div>
+
+  <!-- 참가 방법 -->
+  <div class="max-w-3xl mx-auto px-5 py-12 sm:py-14">
+    <div class="text-xs text-accent uppercase tracking-wider mb-3 font-black">HOW TO JOIN</div>
+    <h2 class="text-3xl sm:text-4xl font-black mb-7 leading-tight">참가 방법</h2>
+
+    <div class="space-y-3">
+      <div class="bg-surface border border-line rounded-2xl p-5 flex items-start gap-4 shadow-soft">
+        <div class="text-3xl sm:text-4xl font-black text-accent num shrink-0 leading-none">01</div>
+        <div>
+          <div class="font-black mb-1">참가 신청</div>
+          <p class="text-sm sm:text-base text-ink-700">카카오 로그인 후 평소 푸는 색·카테고리 선택</p>
+        </div>
+      </div>
+      <div class="bg-surface border border-line rounded-2xl p-5 flex items-start gap-4 shadow-soft">
+        <div class="text-3xl sm:text-4xl font-black text-accent num shrink-0 leading-none">02</div>
+        <div>
+          <div class="font-black mb-1">참가비 입금</div>
+          <p class="text-sm sm:text-base text-ink-700">10,000원 입금 후 운영진 확인</p>
+        </div>
+      </div>
+      <div class="bg-surface border border-line rounded-2xl p-5 flex items-start gap-4 shadow-soft">
+        <div class="text-3xl sm:text-4xl font-black text-accent num shrink-0 leading-none">03</div>
+        <div>
+          <div class="font-black mb-1">팀 배정 안내</div>
+          <p class="text-sm sm:text-base text-ink-700">5/9 카카오톡으로 팀과 첫 시작 벽 안내</p>
+        </div>
+      </div>
+      <div class="bg-surface border border-line rounded-2xl p-5 flex items-start gap-4 shadow-soft">
+        <div class="text-3xl sm:text-4xl font-black text-accent num shrink-0 leading-none">04</div>
+        <div>
+          <div class="font-black mb-1">5/10 출발</div>
+          <p class="text-sm sm:text-base text-ink-700">09:30 신사 집결, 16:50 기록 마감</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="max-w-3xl mx-auto px-5 py-12 sm:py-14">
+    <div class="text-xs text-accent uppercase tracking-wider mb-3 font-black">FAQ</div>
+    <h2 class="text-3xl sm:text-4xl font-black mb-7 leading-tight">자주 묻는 질문</h2>
+
+    <div class="space-y-3">
+      <details class="group bg-surface border-2 border-accent rounded-2xl shadow-soft" open>
+        <summary class="p-5 font-black cursor-pointer flex justify-between items-center gap-3 list-none">
+          <span class="text-base flex items-center gap-2">
+            <span class="text-accent">!</span>
+            일일권으로도 참가 가능한가요?
+          </span>
+          <span class="text-ink-300 group-open:rotate-180 transition shrink-0">▼</span>
+        </summary>
+        <div class="px-5 pb-5 text-sm sm:text-base text-ink-700 leading-relaxed">
+          <strong class="text-ink-900">아니요, 일일권은 참가 불가합니다.</strong> 더클라임 일일권은 하루에 한 지점만 이용할 수 있어, 6개 지점을 다 도는 이 대회와 맞지 않아요. <strong class="text-ink-900">횟수권(5회·10회) 또는 개월권</strong> 보유자만 참가할 수 있습니다.
+        </div>
+      </details>
+
+      <details class="group bg-surface border border-line rounded-2xl shadow-soft">
+        <summary class="p-5 font-black cursor-pointer flex justify-between items-center gap-3 list-none">
+          <span class="text-base">참가비 환불 가능한가요?</span>
+          <span class="text-ink-300 group-open:rotate-180 transition shrink-0">▼</span>
+        </summary>
+        <div class="px-5 pb-5 text-sm sm:text-base text-ink-700">
+          신청 후 입금 시점부터 환불 불가합니다. 신중히 결정해주세요.
+        </div>
+      </details>
+
+      <details class="group bg-surface border border-line rounded-2xl shadow-soft">
+        <summary class="p-5 font-black cursor-pointer flex justify-between items-center gap-3 list-none">
+          <span class="text-base">기록은 어떻게 검증되나요?</span>
+          <span class="text-ink-300 group-open:rotate-180 transition shrink-0">▼</span>
+        </summary>
+        <div class="px-5 pb-5 text-sm sm:text-base text-ink-700">
+          사진/영상 인증 없이 본인 양심에 맡깁니다. 같은 팀에서 함께 도는 동료들이 자연스러운 견제 역할을 합니다.
+        </div>
+      </details>
+
+      <details class="group bg-surface border border-line rounded-2xl shadow-soft">
+        <summary class="p-5 font-black cursor-pointer flex justify-between items-center gap-3 list-none">
+          <span class="text-base">게스트도 참가할 수 있나요?</span>
+          <span class="text-ink-300 group-open:rotate-180 transition shrink-0">▼</span>
+        </summary>
+        <div class="px-5 pb-5 text-sm sm:text-base text-ink-700">
+          크루원이 아닌 게스트도 동일한 참가비로 참가 가능하며, 시상 대상입니다.
+        </div>
+      </details>
+
+      <details class="group bg-surface border border-line rounded-2xl shadow-soft">
+        <summary class="p-5 font-black cursor-pointer flex justify-between items-center gap-3 list-none">
+          <span class="text-base">팀별로 시작 지점이 달라요?</span>
+          <span class="text-ink-300 group-open:rotate-180 transition shrink-0">▼</span>
+        </summary>
+        <div class="px-5 pb-5 text-sm sm:text-base text-ink-700">
+          아니요, 모두 같은 지점에서 같은 시간에 시작합니다. 같은 지점 안에서 한 벽에 사람이 몰리지 않도록 <strong class="text-ink-900">팀별 첫 시작 벽만</strong> 다릅니다.
+        </div>
+      </details>
+
+      <details class="group bg-surface border border-line rounded-2xl shadow-soft">
+        <summary class="p-5 font-black cursor-pointer flex justify-between items-center gap-3 list-none">
+          <span class="text-base">세팅이 변경되면?</span>
+          <span class="text-ink-300 group-open:rotate-180 transition shrink-0">▼</span>
+        </summary>
+        <div class="px-5 pb-5 text-sm sm:text-base text-ink-700">
+          대회 전날(5/9)까지 운영진이 모든 지점의 색별 갯수를 확정합니다.
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="max-w-3xl mx-auto px-5 py-16 sm:py-20">
+    <div class="bg-surface border border-line rounded-3xl p-8 sm:p-12 text-center shadow-card">
+      <h2 class="text-3xl sm:text-5xl font-black mb-4 leading-tight">준비됐어?</h2>
+      <p class="text-ink-700 mb-8 text-base sm:text-lg">하루 안에 6개 지점, 본인의 한계를 시험하는 시간.</p>
+      <button onclick="showScreen('signup')" class="px-8 py-4 bg-accent hover:bg-accent/90 transition rounded-xl font-bold text-white text-base shadow-pop">
+        지금 신청하기 →
+      </button>
+    </div>
+  </div>
+
+  <footer class="border-t border-line py-8 text-center text-xs text-ink-500">
+    THE CLIMB GANGNAM TOUR 2026 · 2026.05.10
+  </footer>
+</section>
+
+
+<!-- ============================================ ② 신청 ============================================ -->
+<section id="screen-signup" class="screen">
+  <div class="max-w-xl mx-auto px-5 py-8 pb-32">
+    <div class="mb-8">
+      <div class="text-xs text-accent uppercase tracking-wider mb-2 font-black">JOIN</div>
+      <h1 class="text-3xl font-black mb-2 leading-tight">참가 신청</h1>
+      <p class="text-ink-700 text-sm">카카오 로그인 완료 · 모든 항목을 입력해주세요</p>
+    </div>
+
+    <div class="space-y-7">
+      <div>
+        <label class="block text-sm font-black mb-2">이름</label>
+        <input type="text" placeholder="실명 또는 닉네임" value="레고"
+          class="w-full px-4 py-3.5 bg-surface border border-line rounded-xl text-base focus:border-accent focus:ring-4 focus:ring-accentSoft focus:outline-none transition shadow-soft" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-black mb-1">평소 푸는 색</label>
+        <p class="text-xs text-ink-500 mb-3">최근 두 달, 두 군데 이상 지점에서 풀어본 가장 높은 색</p>
+        <div class="grid grid-cols-3 gap-2">
+          <button type="button" onclick="selectGrade('red')" class="grade-option p-4 rounded-xl bg-surface border-2 border-line transition shadow-soft" data-grade="red">
+            <span class="grade-dot grade-dot-xl mx-auto block mb-2" style="background: #DC2626;"></span>
+            <div class="text-sm font-black">빨강</div>
+          </button>
+          <button type="button" onclick="selectGrade('pink')" class="grade-option p-4 rounded-xl border-2 transition shadow-soft" style="background: #FDF2F8; border-color: #DB2777;" data-grade="pink">
+            <span class="grade-dot grade-dot-xl mx-auto block mb-2" style="background: #DB2777;"></span>
+            <div class="text-sm font-black">핑크</div>
+          </button>
+          <button type="button" onclick="selectGrade('purple')" class="grade-option p-4 rounded-xl bg-surface border-2 border-line transition shadow-soft" data-grade="purple">
+            <span class="grade-dot grade-dot-xl mx-auto block mb-2" style="background: #9333EA;"></span>
+            <div class="text-sm font-black">보라</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- 안내 문구 -->
+      <div id="mapping-preview" class="bg-mute rounded-2xl p-4">
+        <div id="preview-single" class="text-center text-sm text-ink-700">
+          평소 <span id="preview-from-text" class="font-black text-ink-900">핑크</span>를 푸신다면 <strong class="text-ink-900">3개 카테고리 중 선택</strong> 가능해요
+        </div>
+      </div>
+
+      <!-- 가이드 (선택에 따라 다르게 표시) -->
+      <div id="grade-guide" class="bg-surface border-2 rounded-2xl p-5 shadow-soft" style="border-color: #DB2777;">
+        <div id="guide-pink-content">
+          <div class="text-sm font-black mb-3 flex items-center gap-2">
+            <span class="grade-dot" style="background: #DB2777;"></span>
+            평소 핑크를 푸시는 분들께
+          </div>
+          <p class="text-xs text-ink-700 mb-3 leading-relaxed">상급 / 중급 둘 중 하나를 직접 고를 수 있어요.</p>
+          <div class="space-y-2 text-xs sm:text-sm">
+            <div class="bg-mute rounded-xl p-3.5">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="grade-dot" style="background: #DC2626;"></span>
+                <span class="font-black" style="color: #DC2626;">상급 (빨강)</span>
+              </div>
+              <p class="text-ink-700">빨강을 한 세션에 절반 이상 풀 수 있어요</p>
+            </div>
+            <div class="bg-mute rounded-xl p-3.5">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="grade-dot" style="background: #2563EB;"></span>
+                <span class="font-black" style="color: #2563EB;">중급 (파랑)</span>
+              </div>
+              <p class="text-ink-700">빨강이 지점 따라 갈리고, 파랑은 무난해요</p>
+            </div>
+          </div>
+        </div>
+        <div id="guide-red-content" style="display: none;">
+          <div class="text-sm font-black mb-3 flex items-center gap-2">
+            <span class="grade-dot" style="background: #DC2626;"></span>
+            평소 빨강을 푸시는 분들께
+          </div>
+          <p class="text-xs text-ink-700 mb-3 leading-relaxed">중급 / 초급 둘 중 하나를 고를 수 있어요.</p>
+          <div class="space-y-2 text-xs sm:text-sm">
+            <div class="bg-mute rounded-xl p-3.5">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="grade-dot" style="background: #2563EB;"></span>
+                <span class="font-black" style="color: #2563EB;">중급 (파랑)</span>
+              </div>
+              <p class="text-ink-700">파랑을 한 세션에 무난히 풀 수 있어요</p>
+            </div>
+            <div class="bg-mute rounded-xl p-3.5">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="grade-dot" style="background: #16A34A;"></span>
+                <span class="font-black" style="color: #16A34A;">초급 (초록)</span>
+              </div>
+              <p class="text-ink-700">파랑도 6개 지점 다 돌기는 부담스러워요</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-black mb-1">카테고리</label>
+        <p class="text-xs text-ink-500 mb-3">본인이 6개 지점을 무난히 돌 수 있는 색을 선택해주세요</p>
+        <div class="space-y-2">
+          <button type="button" class="category-option w-full p-4 rounded-xl border-2 transition text-left shadow-soft flex items-center gap-3" style="background: #FEF2F2; border-color: #DC2626;" data-category="advanced">
+            <span class="grade-dot grade-dot-xl" style="background: #DC2626;"></span>
+            <div class="flex-1">
+              <div class="font-black text-base">상급조</div>
+              <div class="text-xs text-ink-700 mt-0.5">빨강을 풀어요</div>
+            </div>
+            <span class="text-[10px] text-ink-500 font-bold tracking-wider">RED</span>
+          </button>
+          <button type="button" class="category-option w-full p-4 rounded-xl bg-surface border-2 border-line hover:border-grade-blue transition text-left shadow-soft flex items-center gap-3" data-category="intermediate">
+            <span class="grade-dot grade-dot-xl" style="background: #2563EB;"></span>
+            <div class="flex-1">
+              <div class="font-black text-base">중급조</div>
+              <div class="text-xs text-ink-700 mt-0.5">파랑을 풀어요</div>
+            </div>
+            <span class="text-[10px] text-ink-500 font-bold tracking-wider">BLUE</span>
+          </button>
+          <button type="button" class="category-option w-full p-4 rounded-xl bg-surface border-2 border-line hover:border-grade-green transition text-left shadow-soft flex items-center gap-3" data-category="beginner">
+            <span class="grade-dot grade-dot-xl" style="background: #16A34A;"></span>
+            <div class="flex-1">
+              <div class="font-black text-base">초급조</div>
+              <div class="text-xs text-ink-700 mt-0.5">초록을 풀어요</div>
+            </div>
+            <span class="text-[10px] text-ink-500 font-bold tracking-wider">GREEN</span>
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-black mb-2">참가 유형</label>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" class="p-4 rounded-xl bg-accentSoft border-2 border-accent transition text-left shadow-soft">
+            <div class="font-black text-base">크루원</div>
+            <div class="text-xs text-ink-700 mt-0.5">정규 크루 멤버</div>
+          </button>
+          <button type="button" class="p-4 rounded-xl bg-surface border-2 border-line hover:border-lineStrong transition text-left shadow-soft">
+            <div class="font-black text-base">게스트</div>
+            <div class="text-xs text-ink-700 mt-0.5">크루원 동반</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- 참가 자격 재확인 -->
+      <div class="bg-surface border-2 border-accent rounded-2xl p-5 shadow-soft">
+        <div class="flex items-start gap-3">
+          <div class="shrink-0 w-7 h-7 rounded-full bg-accent text-white flex items-center justify-center text-sm font-black">!</div>
+          <div>
+            <div class="text-xs text-accent uppercase tracking-wider mb-1 font-black">참가 자격 재확인</div>
+            <div class="font-black text-sm mb-1.5">횟수권 / 개월권 이용 가능하신가요?</div>
+            <p class="text-xs text-ink-700 leading-relaxed">일일권은 한 지점만 이용 가능해 6개 지점 투어는 불가능해요.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-surface border border-line rounded-2xl p-5 shadow-soft">
+        <label class="flex items-start gap-3 cursor-pointer">
+          <input type="checkbox" checked class="w-5 h-5 mt-0.5 rounded accent-accent shrink-0" />
+          <div class="flex-1">
+            <div class="font-black mb-2 text-sm">아래 사항에 모두 동의합니다</div>
+            <ul class="text-xs sm:text-sm text-ink-700 space-y-1.5 list-disc pl-4">
+              <li>횟수권 / 개월권 보유 (일일권 참가 불가)</li>
+              <li>참가비 1만원은 입금 시점부터 환불 불가</li>
+              <li>기록은 본인 양심에 따라 정직하게 입력</li>
+              <li>일정/시간은 당일 운영진 판단에 따라 조정 가능</li>
+              <li>부상에 대한 책임은 본인에게 있음</li>
+            </ul>
+          </div>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="fixed bottom-0 left-0 right-0 bg-paper/95 backdrop-blur-md border-t border-line p-4 safe-bottom">
+    <div class="max-w-xl mx-auto">
+      <button type="button" onclick="alert('실제 동작은 구현 단계에서!\\n프로토타입에서는 신청 완료로 간주합니다.')" class="w-full py-4 bg-accent hover:bg-accent/90 transition rounded-xl font-bold text-white text-base shadow-pop">
+        신청 완료
+      </button>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================ ③ 풀이 기록 ============================================ -->
+<section id="screen-input" class="screen">
+  <div class="sticky top-12 z-40 bg-paper/95 backdrop-blur-md border-b border-line">
+    <div class="max-w-xl mx-auto px-5 py-4">
+      <div class="flex items-center justify-between mb-1">
+        <div class="text-xs text-accent uppercase tracking-wider font-black">RECORD · 풀이 기록</div>
+        <button onclick="showScreen('dashboard')" class="text-xs font-bold text-ink-700 hover:text-accent transition">
+          순위 보기 →
+        </button>
+      </div>
+      <div class="flex items-center gap-2 mb-3 flex-wrap">
+        <span class="font-black">레고</span>
+        <span class="grade-pill pill-red">
+          <span class="grade-dot" style="background: #DC2626;"></span>
+          상급조 · 빨강 풀이
+        </span>
+        <span class="text-xs text-ink-500">A팀</span>
+      </div>
+      <div class="flex items-end justify-between mb-2">
+        <div>
+          <span class="text-2xl font-black num">27</span>
+          <span class="text-ink-500 num text-base"> / 90 완등</span>
+        </div>
+        <div class="text-2xl font-black text-accent num">30%</div>
+      </div>
+      <div class="h-2 bg-mute rounded-full overflow-hidden">
+        <div class="h-full bg-accent rounded-full transition-all duration-500" style="width: 30%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-xl mx-auto px-5 pt-4">
+    <details class="bg-surface border border-line rounded-xl shadow-soft">
+      <summary class="p-4 cursor-pointer flex items-center justify-between gap-3 list-none">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-accentSoft flex items-center justify-center text-lg shrink-0">⏱</div>
+          <div>
+            <div class="text-xs text-ink-500">현재 11:24 · 강남에서 진행 중</div>
+            <div class="text-sm font-black">→ 12:30 점심</div>
+          </div>
+        </div>
+        <span class="text-ink-500 text-xs font-bold">전체 ▼</span>
+      </summary>
+      <div class="p-4 border-t border-line space-y-2 text-sm">
+        <div class="flex justify-between text-ink-500"><span class="num">09:30</span><span>신사 출발</span></div>
+        <div class="flex justify-between text-ink-500"><span class="num">10:25</span><span>논현</span></div>
+        <div class="flex justify-between font-black"><span class="num text-accent">11:25</span><span>강남 (현재)</span></div>
+        <div class="flex justify-between" style="color: #A16207;"><span class="num">12:30</span><span>점심 (60분)</span></div>
+        <div class="flex justify-between text-ink-500"><span class="num">13:30</span><span>양재</span></div>
+        <div class="flex justify-between text-ink-500"><span class="num">14:35</span><span>사당</span></div>
+        <div class="flex justify-between text-ink-500"><span class="num">15:40</span><span>이수</span></div>
+        <div class="flex justify-between font-black text-accent"><span class="num">16:50</span><span>대회 종료</span></div>
+      </div>
+    </details>
+  </div>
+
+  <div class="max-w-xl mx-auto px-5 mt-5">
+    <div class="text-xs text-ink-500 uppercase tracking-wider mb-2 font-bold">지점 선택</div>
+    <div class="flex gap-2 overflow-x-auto no-scrollbar pb-2 -mx-5 px-5">
+      <button class="gym-tab shrink-0 px-4 py-3 rounded-xl bg-surface border border-line text-sm font-black hover:border-lineStrong transition flex items-center gap-2 shadow-soft">
+        신사 <span class="text-xs text-grade-green num font-bold">5/8</span>
+      </button>
+      <button class="gym-tab shrink-0 px-4 py-3 rounded-xl bg-surface border border-line text-sm font-black hover:border-lineStrong transition flex items-center gap-2 shadow-soft">
+        논현 <span class="text-xs text-grade-green num font-bold">4/7</span>
+      </button>
+      <button class="gym-tab shrink-0 px-4 py-3 rounded-xl bg-accent text-white text-sm font-black flex items-center gap-2 shadow-pop">
+        강남 <span class="text-xs opacity-80 num">2/12</span>
+      </button>
+      <button class="gym-tab shrink-0 px-4 py-3 rounded-xl bg-surface border border-line text-sm font-black hover:border-lineStrong transition flex items-center gap-2 shadow-soft">
+        양재 <span class="text-xs text-ink-500 num font-bold">0/12</span>
+      </button>
+      <button class="gym-tab shrink-0 px-4 py-3 rounded-xl bg-surface border border-line text-sm font-black hover:border-lineStrong transition flex items-center gap-2 shadow-soft">
+        사당 <span class="text-xs text-ink-500 num font-bold">0/9</span>
+      </button>
+      <button class="gym-tab shrink-0 px-4 py-3 rounded-xl bg-surface border border-line text-sm font-black hover:border-lineStrong transition flex items-center gap-2 shadow-soft">
+        이수 <span class="text-xs text-ink-500 num font-bold">0/6</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="max-w-xl mx-auto px-5 pt-3">
+    <div class="bg-mute rounded-xl px-4 py-3 text-sm text-ink-700">
+      벽마다 본인이 <strong class="text-ink-900">완등한 빨강 갯수</strong>를 +/- 버튼으로 기록해주세요.
+    </div>
+  </div>
+
+  <div class="max-w-xl mx-auto px-5 pt-3 pb-32 space-y-3">
+    <div class="flex items-center gap-2 mb-1 px-1">
+      <span class="text-xs text-ink-500 font-bold tracking-wider">강남점 · 빨강 완등 갯수</span>
+    </div>
+
+    <div class="bg-surface border border-line rounded-2xl p-5 shadow-soft">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <div class="font-black text-lg">1번 벽</div>
+          <div class="text-xs text-ink-500 mt-0.5">전체 빨강 5개</div>
+        </div>
+        <div class="text-right">
+          <div class="text-xs text-ink-500">완등률</div>
+          <div class="text-sm font-black num wall-ratio">60%</div>
+        </div>
+      </div>
+      <div class="h-1.5 bg-mute rounded-full overflow-hidden mb-4">
+        <div class="h-full bg-accent rounded-full transition-all duration-300 wall-progress" style="width: 60%"></div>
+      </div>
+      <div class="flex items-center justify-center gap-4">
+        <button onclick="adjustCount(this, -1, 5)" class="counter-btn w-14 h-14 rounded-2xl bg-mute hover:bg-line transition flex items-center justify-center text-2xl font-black">−</button>
+        <div class="flex-1 text-center cursor-pointer" onclick="promptDirectInput(this, 5)">
+          <div class="text-4xl font-black num count-display leading-none">3</div>
+          <div class="text-xs text-ink-500 num mt-1">/ 5</div>
+        </div>
+        <button onclick="adjustCount(this, 1, 5)" class="counter-btn w-14 h-14 rounded-2xl bg-accent hover:bg-accent/90 transition flex items-center justify-center text-2xl font-black text-white shadow-pop">+</button>
+      </div>
+    </div>
+
+    <div class="bg-surface border border-line rounded-2xl p-5 shadow-soft">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <div class="font-black text-lg">2번 벽</div>
+          <div class="text-xs text-ink-500 mt-0.5">전체 빨강 4개</div>
+        </div>
+        <div class="text-right">
+          <div class="text-xs text-ink-500">완등률</div>
+          <div class="text-sm font-black num wall-ratio">50%</div>
+        </div>
+      </div>
+      <div class="h-1.5 bg-mute rounded-full overflow-hidden mb-4">
+        <div class="h-full bg-accent rounded-full transition-all duration-300 wall-progress" style="width: 50%"></div>
+      </div>
+      <div class="flex items-center justify-center gap-4">
+        <button onclick="adjustCount(this, -1, 4)" class="counter-btn w-14 h-14 rounded-2xl bg-mute hover:bg-line transition flex items-center justify-center text-2xl font-black">−</button>
+        <div class="flex-1 text-center cursor-pointer" onclick="promptDirectInput(this, 4)">
+          <div class="text-4xl font-black num count-display leading-none">2</div>
+          <div class="text-xs text-ink-500 num mt-1">/ 4</div>
+        </div>
+        <button onclick="adjustCount(this, 1, 4)" class="counter-btn w-14 h-14 rounded-2xl bg-accent hover:bg-accent/90 transition flex items-center justify-center text-2xl font-black text-white shadow-pop">+</button>
+      </div>
+    </div>
+
+    <div class="bg-surface border border-line rounded-2xl p-5 shadow-soft">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <div class="font-black text-lg">슬랩 벽</div>
+          <div class="text-xs text-ink-500 mt-0.5">전체 빨강 3개</div>
+        </div>
+        <div class="text-right">
+          <div class="text-xs text-ink-500">완등률</div>
+          <div class="text-sm font-black num text-ink-300 wall-ratio">0%</div>
+        </div>
+      </div>
+      <div class="h-1.5 bg-mute rounded-full overflow-hidden mb-4">
+        <div class="h-full bg-accent rounded-full transition-all duration-300 wall-progress" style="width: 0%"></div>
+      </div>
+      <div class="flex items-center justify-center gap-4">
+        <button onclick="adjustCount(this, -1, 3)" class="counter-btn w-14 h-14 rounded-2xl bg-mute transition flex items-center justify-center text-2xl font-black opacity-50" disabled>−</button>
+        <div class="flex-1 text-center cursor-pointer" onclick="promptDirectInput(this, 3)">
+          <div class="text-4xl font-black num count-display leading-none text-ink-300">0</div>
+          <div class="text-xs text-ink-500 num mt-1">/ 3</div>
+        </div>
+        <button onclick="adjustCount(this, 1, 3)" class="counter-btn w-14 h-14 rounded-2xl bg-accent hover:bg-accent/90 transition flex items-center justify-center text-2xl font-black text-white shadow-pop">+</button>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-center gap-2 text-xs text-ink-500 pt-2">
+      <span class="w-1.5 h-1.5 rounded-full bg-grade-green"></span>
+      자동 저장됨 · 방금 전
+    </div>
+
+    <div class="bg-mute rounded-xl p-4 mt-4">
+      <div class="text-xs font-bold text-ink-700 mb-1">💡 빠른 입력</div>
+      <p class="text-xs text-ink-700">숫자를 직접 탭하면 키패드로 수정할 수 있어요.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================ ④ 대시보드 ============================================ -->
+<section id="screen-dashboard" class="screen">
+  <div class="max-w-xl mx-auto px-5 py-5 pb-12">
+
+    <div class="mb-4 rounded-2xl p-4 flex items-start gap-3 shadow-soft" style="background: #FEFCE8; border: 1px solid #FDE68A;">
+      <span class="text-lg shrink-0">📢</span>
+      <div class="flex-1">
+        <div class="text-xs font-black mb-1" style="color: #A16207;">운영진 공지</div>
+        <p class="text-sm" style="color: #713F12;">양재점 사람 많아 50분 → 60분으로 연장합니다.</p>
+      </div>
+      <button class="text-ink-500 hover:text-ink-900 transition shrink-0 text-sm">✕</button>
+    </div>
+
+    <div class="mb-6 bg-surface border border-line rounded-3xl p-6 relative overflow-hidden shadow-card">
+      <div class="absolute top-0 right-0 w-40 h-40 bg-accentSoft rounded-full blur-3xl opacity-50"></div>
+      <div class="relative">
+        <div class="flex items-center gap-2 mb-5 flex-wrap">
+          <span class="grade-pill pill-red">
+            <span class="grade-dot" style="background: #DC2626;"></span>
+            상급조 · 빨강 풀이
+          </span>
+          <span class="text-xs text-ink-500 font-medium">A팀 · 레고</span>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4 mb-5">
+          <div>
+            <div class="text-xs text-ink-500 mb-1.5 font-bold">완등 비율</div>
+            <div class="text-5xl font-black text-accent num leading-none">30<span class="text-2xl">%</span></div>
+            <div class="text-sm text-ink-700 mt-1 num">27 / 90개</div>
+          </div>
+          <div>
+            <div class="text-xs text-ink-500 mb-1.5 font-bold">카테고리 순위</div>
+            <div class="text-5xl font-black num leading-none">4<span class="text-2xl text-ink-500">위</span></div>
+            <div class="text-sm text-ink-700 mt-1 num">총 18명 중</div>
+          </div>
+        </div>
+        
+        <div class="h-2 bg-mute rounded-full overflow-hidden mb-5">
+          <div class="h-full bg-accent rounded-full transition-all" style="width: 30%"></div>
+        </div>
+        
+        <button onclick="showScreen('input')" class="w-full py-3.5 bg-accent hover:bg-accent/90 transition rounded-xl font-bold text-white text-base shadow-pop">
+          풀이 기록하기 →
+        </button>
+      </div>
+    </div>
+
+    <details class="mb-6 bg-surface border border-line rounded-2xl shadow-soft">
+      <summary class="p-4 cursor-pointer flex items-center justify-between gap-3 list-none">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-accentSoft flex items-center justify-center text-lg shrink-0">⏱</div>
+          <div>
+            <div class="text-xs text-ink-500">현재 11:24 · 강남</div>
+            <div class="text-sm font-black">→ 12:30 점심</div>
+          </div>
+        </div>
+        <span class="text-ink-500 text-xs font-bold">전체 ▼</span>
+      </summary>
+      <div class="p-4 border-t border-line space-y-2 text-sm">
+        <div class="flex justify-between text-ink-500"><span class="num">09:30</span><span>신사</span></div>
+        <div class="flex justify-between text-ink-500"><span class="num">10:25</span><span>논현</span></div>
+        <div class="flex justify-between font-black"><span class="num text-accent">11:25</span><span>강남 (현재)</span></div>
+        <div class="flex justify-between" style="color: #A16207;"><span class="num">12:30</span><span>점심</span></div>
+        <div class="flex justify-between text-ink-500"><span class="num">13:30</span><span>양재</span></div>
+        <div class="flex justify-between font-black text-accent"><span class="num">16:50</span><span>종료</span></div>
+      </div>
+    </details>
+
+    <div class="flex gap-1.5 mb-4 p-1.5 bg-mute rounded-xl">
+      <button class="flex-1 py-3 rounded-lg bg-surface text-xs sm:text-sm font-black shadow-soft flex items-center justify-center gap-1.5">
+        <span class="grade-dot" style="background: #DC2626;"></span>
+        상급 · 18
+      </button>
+      <button class="flex-1 py-3 rounded-lg text-ink-500 hover:text-ink-900 transition text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5">
+        <span class="grade-dot" style="background: #2563EB;"></span>
+        중급 · 14
+      </button>
+      <button class="flex-1 py-3 rounded-lg text-ink-500 hover:text-ink-900 transition text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5">
+        <span class="grade-dot" style="background: #16A34A;"></span>
+        초급 · 6
+      </button>
+    </div>
+
+    <div class="space-y-2">
+      <div class="bg-surface border border-line rounded-2xl p-4 flex items-center gap-4 shadow-soft">
+        <div class="w-10 text-center">
+          <div class="text-2xl font-black num" style="color: #EAB308;">1</div>
+          <div class="text-base">🥇</div>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-black text-base truncate">김XX</div>
+          <div class="text-xs text-ink-500 num mt-0.5">45 / 90개</div>
+        </div>
+        <div class="text-right"><div class="text-2xl font-black num">50%</div></div>
+      </div>
+
+      <div class="bg-surface border border-line rounded-2xl p-4 flex items-center gap-4 shadow-soft">
+        <div class="w-10 text-center">
+          <div class="text-2xl font-black num text-ink-700">2</div>
+          <div class="text-base">🥈</div>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-black text-base truncate flex items-center gap-2">
+            박XX
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-mute text-ink-700 font-bold">게스트</span>
+          </div>
+          <div class="text-xs text-ink-500 num mt-0.5">40 / 90개</div>
+        </div>
+        <div class="text-right"><div class="text-2xl font-black num">44%</div></div>
+      </div>
+
+      <div class="bg-surface border border-line rounded-2xl p-4 flex items-center gap-4 shadow-soft">
+        <div class="w-10 text-center">
+          <div class="text-2xl font-black num text-ink-700">3</div>
+          <div class="text-base">🥉</div>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-black text-base truncate">이XX</div>
+          <div class="text-xs text-ink-500 num mt-0.5">32 / 90개</div>
+        </div>
+        <div class="text-right"><div class="text-2xl font-black num">35%</div></div>
+      </div>
+
+      <div class="rounded-2xl p-4 flex items-center gap-4 relative shadow-pop" style="background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%); border: 2px solid #DC2626;">
+        <div class="absolute -top-2 left-4 px-2 py-0.5 bg-accent text-white text-[10px] rounded-md font-black">나</div>
+        <div class="w-10 text-center">
+          <div class="text-2xl font-black text-accent num">4</div>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-black text-base truncate">레고</div>
+          <div class="text-xs text-accent/80 num mt-0.5 font-bold">27 / 90개</div>
+        </div>
+        <div class="text-right"><div class="text-2xl font-black text-accent num">30%</div></div>
+      </div>
+
+      <div class="bg-surface border border-line rounded-2xl p-4 flex items-center gap-4 shadow-soft">
+        <div class="w-10 text-center"><div class="text-2xl font-black num text-ink-700">5</div></div>
+        <div class="flex-1 min-w-0">
+          <div class="font-black text-base truncate">최XX</div>
+          <div class="text-xs text-ink-500 num mt-0.5">25 / 90개</div>
+        </div>
+        <div class="text-right"><div class="text-2xl font-black num">27%</div></div>
+      </div>
+
+      <div class="bg-surface border border-line rounded-2xl p-4 flex items-center gap-4 shadow-soft">
+        <div class="w-10 text-center">
+          <div class="text-2xl font-black num text-ink-700">6</div>
+          <div class="text-[9px] text-ink-500 -mt-0.5 font-bold">공동</div>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-black text-base truncate">정XX</div>
+          <div class="text-xs text-ink-500 num mt-0.5">22 / 90개</div>
+        </div>
+        <div class="text-right"><div class="text-2xl font-black num">24%</div></div>
+      </div>
+
+      <div class="bg-surface border border-line rounded-2xl p-4 flex items-center gap-4 shadow-soft">
+        <div class="w-10 text-center">
+          <div class="text-2xl font-black num text-ink-700">6</div>
+          <div class="text-[9px] text-ink-500 -mt-0.5 font-bold">공동</div>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-black text-base truncate">한XX</div>
+          <div class="text-xs text-ink-500 num mt-0.5">22 / 90개</div>
+        </div>
+        <div class="text-right"><div class="text-2xl font-black num">24%</div></div>
+      </div>
+
+      <div class="text-center pt-4">
+        <button class="text-sm text-ink-700 hover:text-ink-900 transition font-bold">더 보기 (11명) ▼</button>
+      </div>
+    </div>
+
+    <div class="flex items-center justify-center gap-3 mt-8 pt-6 border-t border-line text-xs text-ink-500">
+      <span class="num">마지막 갱신: 11:24:32</span>
+      <button class="text-ink-700 hover:text-accent transition font-bold flex items-center gap-1">↻ 새로고침</button>
+    </div>
+  </div>
+</section>
+
+
+<script>
+  function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(b => {
+      if (b.dataset.screen === name) {
+        b.classList.add('bg-ink-900', 'text-white');
+        b.classList.remove('bg-mute', 'text-ink-700');
+      } else {
+        b.classList.remove('bg-ink-900', 'text-white');
+        b.classList.add('bg-mute', 'text-ink-700');
+      }
+    });
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+  
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    b.classList.add('bg-mute', 'text-ink-700');
+  });
+  document.querySelector('[data-screen="landing"]').classList.add('bg-ink-900', 'text-white');
+  document.querySelector('[data-screen="landing"]').classList.remove('bg-mute', 'text-ink-700');
+
+  function selectGrade(grade) {
+    const config = {
+      red:    { color: '#DC2626', bg: '#FEF2F2', name: '빨강', desc: '중급 또는 초급에서 선택', guideId: 'red' },
+      pink:   { color: '#DB2777', bg: '#FDF2F8', name: '핑크', desc: '상급 또는 중급에서 선택', guideId: 'pink' },
+      purple: { color: '#9333EA', bg: '#FAF5FF', name: '보라', desc: '상급(빨강) 참가', guideId: null },
+    };
+    
+    // 그레이드 카드 시각 갱신
+    document.querySelectorAll('.grade-option').forEach(opt => {
+      opt.style.borderColor = '';
+      opt.style.background = '';
+      opt.classList.add('bg-surface');
+    });
+    const selected = document.querySelector(`.grade-option[data-grade="${grade}"]`);
+    selected.classList.remove('bg-surface');
+    selected.style.background = config[grade].bg;
+    selected.style.borderColor = config[grade].color;
+    
+    const c = config[grade];
+    
+    // 안내 문구 갱신
+    const previewSingle = document.getElementById('preview-single');
+    if (grade === 'purple') {
+      previewSingle.innerHTML = `평소 <span class="font-black text-ink-900">보라</span>를 푸신다면 → <span class="font-black text-ink-900">상급조 (빨강 풀이)</span>`;
+    } else {
+      previewSingle.innerHTML = `평소 <span class="font-black text-ink-900">${c.name}</span>를 푸신다면 <strong class="text-ink-900">${c.desc}</strong>`;
+    }
+    
+    // 가이드 박스 표시
+    const guideEl = document.getElementById('grade-guide');
+    const pinkGuide = document.getElementById('guide-pink-content');
+    const redGuide = document.getElementById('guide-red-content');
+    
+    if (grade === 'purple') {
+      guideEl.style.display = 'none';
+    } else {
+      guideEl.style.display = 'block';
+      guideEl.style.borderColor = c.color;
+      pinkGuide.style.display = grade === 'pink' ? 'block' : 'none';
+      redGuide.style.display = grade === 'red' ? 'block' : 'none';
+    }
+  }
+
+  function adjustCount(btn, delta, max) {
+    const wall = btn.closest('.bg-surface');
+    const display = wall.querySelector('.count-display');
+    const progress = wall.querySelector('.wall-progress');
+    const ratio = wall.querySelector('.wall-ratio');
+    let current = parseInt(display.textContent);
+    current = Math.max(0, Math.min(max, current + delta));
+    display.textContent = current;
+    
+    const pct = (current / max) * 100;
+    if (progress) progress.style.width = pct + '%';
+    if (ratio) {
+      ratio.textContent = Math.round(pct) + '%';
+      if (current === 0) ratio.classList.add('text-ink-300');
+      else ratio.classList.remove('text-ink-300');
+    }
+    
+    if (current === 0) display.classList.add('text-ink-300');
+    else display.classList.remove('text-ink-300');
+    
+    const minusBtn = wall.querySelector('button:first-of-type');
+    if (current === 0) {
+      minusBtn.classList.add('opacity-50');
+      minusBtn.disabled = true;
+    } else {
+      minusBtn.classList.remove('opacity-50');
+      minusBtn.disabled = false;
+    }
+  }
+  
+  function promptDirectInput(el, max) {
+    const display = el.querySelector('.count-display');
+    const value = prompt(`완등한 갯수를 입력하세요 (0~${max})`, display.textContent);
+    if (value === null) return;
+    let n = parseInt(value);
+    if (isNaN(n) || n < 0) n = 0;
+    if (n > max) n = max;
+    
+    const wall = el.closest('.bg-surface');
+    display.textContent = n;
+    const progress = wall.querySelector('.wall-progress');
+    if (progress) progress.style.width = (n / max * 100) + '%';
+    const ratio = wall.querySelector('.wall-ratio');
+    if (ratio) ratio.textContent = Math.round(n / max * 100) + '%';
+  }
+</script>
+
+</body>
+</html>
