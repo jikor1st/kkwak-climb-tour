@@ -8,13 +8,25 @@ import { NumberInputDialog } from "@/components/NumberInputDialog"
 
 type SaveState = "idle" | "saving" | "saved" | "error"
 
+type LockReason = {
+  kind: "unpaid" | "closed"
+  title: string
+  desc: string
+}
+
 type Props = {
-  participant: { id: string; display_name: string; category: Category }
+  participant: {
+    id: string
+    display_name: string
+    category: Category
+    paid: boolean
+  }
   meta: { label: string; solveLabel: string; color: string; bg: string }
   grade: SolveGrade
   gyms: GymData[]
   initialGymId: string | null
   initialTotals: { solved: number; total: number; rate: number }
+  lockReason: LockReason | null
   emptyState: React.ReactNode
 }
 
@@ -25,8 +37,10 @@ export function RecordForm({
   gyms,
   initialGymId,
   initialTotals,
+  lockReason,
   emptyState,
 }: Props) {
+  const locked = lockReason !== null
   const [counts, setCounts] = useState<Record<string, number>>(() => {
     const init: Record<string, number> = {}
     for (const g of gyms) for (const w of g.walls) init[w.id] = w.solved_count
@@ -107,6 +121,7 @@ export function RecordForm({
   }
 
   function adjust(wallId: string, delta: number) {
+    if (locked) return
     setCounts((c) => {
       const total = wallTotals.get(wallId) ?? 0
       const next = Math.max(0, Math.min((c[wallId] ?? 0) + delta, total))
@@ -117,6 +132,7 @@ export function RecordForm({
   }
 
   function setExactNumber(wallId: string, value: number) {
+    if (locked) return
     const total = wallTotals.get(wallId) ?? 0
     const next = Math.max(0, Math.min(Math.floor(value), total))
     setCounts((c) => ({ ...c, [wallId]: next }))
@@ -235,6 +251,48 @@ export function RecordForm({
         </div>
       </div>
 
+      {/* Lock banner */}
+      {lockReason && (
+        <div className="max-w-3xl mx-auto px-5 pt-3">
+          <div
+            className={`rounded-xl px-4 py-4 border-2 flex items-start gap-3 ${
+              lockReason.kind === "unpaid"
+                ? "bg-accent-soft border-accent/30"
+                : "bg-ink-900 border-ink-900 text-white"
+            }`}
+          >
+            <div
+              className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-base font-black ${
+                lockReason.kind === "unpaid"
+                  ? "bg-accent text-white"
+                  : "bg-white/20 text-white"
+              }`}
+              aria-hidden
+            >
+              {lockReason.kind === "unpaid" ? "₩" : "🔒"}
+            </div>
+            <div className="flex-1 pt-0.5">
+              <div
+                className={`font-black text-sm ${
+                  lockReason.kind === "unpaid" ? "text-accent" : "text-white"
+                }`}
+              >
+                {lockReason.title}
+              </div>
+              <div
+                className={`text-xs mt-0.5 leading-relaxed ${
+                  lockReason.kind === "unpaid"
+                    ? "text-ink-700"
+                    : "text-white/80"
+                }`}
+              >
+                {lockReason.desc}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Hint */}
       <div className="max-w-3xl mx-auto px-5 pt-3">
         <div className="bg-mute rounded-xl px-4 py-3 text-xs text-ink-700 leading-relaxed">
@@ -264,8 +322,11 @@ export function RecordForm({
               total={w.total_count}
               count={counts[w.id] ?? 0}
               accent={meta.color}
+              disabled={locked}
               onAdjust={adjust}
-              onOpenEdit={() => setEditingWallId(w.id)}
+              onOpenEdit={() => {
+                if (!locked) setEditingWallId(w.id)
+              }}
             />
           ))
         )}
@@ -303,6 +364,7 @@ function WallCard({
   total,
   count,
   accent,
+  disabled = false,
   onAdjust,
   onOpenEdit,
 }: {
@@ -311,15 +373,16 @@ function WallCard({
   total: number
   count: number
   accent: string
+  disabled?: boolean
   onAdjust: (id: string, delta: number) => void
   onOpenEdit: () => void
 }) {
   const ratio = total > 0 ? Math.round((count / total) * 100) : 0
-  const minusDisabled = count <= 0 || total === 0
-  const plusDisabled = count >= total || total === 0
+  const minusDisabled = disabled || count <= 0 || total === 0
+  const plusDisabled = disabled || count >= total || total === 0
 
   function handleEdit() {
-    if (total === 0) return
+    if (disabled || total === 0) return
     onOpenEdit()
   }
 
@@ -361,8 +424,8 @@ function WallCard({
         <button
           type="button"
           onClick={handleEdit}
-          disabled={total === 0}
-          className="flex-1 text-center py-2 rounded-xl hover:bg-mute disabled:hover:bg-transparent transition disabled:cursor-not-allowed"
+          disabled={disabled || total === 0}
+          className="flex-1 text-center py-2 rounded-xl hover:bg-mute disabled:hover:bg-transparent transition disabled:cursor-not-allowed disabled:opacity-60"
         >
           <div
             className={`text-4xl font-black num leading-none ${

@@ -27,6 +27,12 @@ export default async function ParticipantLayout({
           {isAdmin && <ModeToggle current="participant" />}
           <div className="flex items-center gap-3 shrink-0">
             <Link
+              href="/"
+              className="text-xs text-ink-500 hover:text-ink-900 transition font-bold whitespace-nowrap"
+            >
+              메인
+            </Link>
+            <Link
               href="/ranking"
               className="text-xs text-ink-500 hover:text-ink-900 transition font-bold whitespace-nowrap"
             >

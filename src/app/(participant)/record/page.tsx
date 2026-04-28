@@ -2,6 +2,7 @@ import Link from "next/link"
 import { requireParticipant } from "@/lib/auth/guards"
 import { loadContestData } from "@/lib/contest/load"
 import { CATEGORY_META, type Category } from "@/lib/contest/grades"
+import { isContestOpen } from "@/lib/contest/timeline-now"
 import { RecordForm } from "./RecordForm"
 
 export const dynamic = "force-dynamic"
@@ -27,6 +28,25 @@ export default async function RecordPage({
 
   const noGyms = contest.gyms.length === 0
   const noWalls = contest.totalCount === 0
+  const window = isContestOpen({
+    contest_date: contest.settings.contest_date,
+    start_time: contest.settings.start_time,
+    end_time: contest.settings.end_time,
+  })
+
+  const lockReason = !participant.paid
+    ? {
+        kind: "unpaid" as const,
+        title: "입금 확인 후 기록할 수 있어요",
+        desc: "운영자가 입금을 확인하면 자동으로 풀리며, 그때부터 기록할 수 있어요.",
+      }
+    : !window.open
+      ? {
+          kind: "closed" as const,
+          title: "지금은 기록할 수 없어요",
+          desc: window.reason ?? "대회 시간이 아닙니다.",
+        }
+      : null
 
   return (
     <RecordForm
@@ -34,6 +54,7 @@ export default async function RecordPage({
         id: participant.id,
         display_name: participant.display_name,
         category: participant.category as Category,
+        paid: participant.paid,
       }}
       meta={meta}
       grade={contest.grade}
@@ -44,6 +65,7 @@ export default async function RecordPage({
         total: contest.totalCount,
         rate: contest.completionRate,
       }}
+      lockReason={lockReason}
       emptyState={
         noGyms ? (
           <EmptyState

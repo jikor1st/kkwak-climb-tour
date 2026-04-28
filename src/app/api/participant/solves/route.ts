@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth/auth"
 import { createServerClient } from "@/lib/supabase/server"
+import { isContestOpen } from "@/lib/contest/timeline-now"
 import { NextResponse } from "next/server"
 
 const CATEGORY_TO_GRADE: Record<string, string> = {
@@ -17,6 +18,13 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "참가 신청이 필요합니다" },
         { status: 401 },
+      )
+    }
+
+    if (!participant.paid) {
+      return NextResponse.json(
+        { error: "입금 확인 후 기록할 수 있어요" },
+        { status: 403 },
       )
     }
 
@@ -43,6 +51,25 @@ export async function POST(req: Request) {
     }
 
     const supabase = createServerClient()
+
+    const { data: settings } = await supabase
+      .from("contest_settings")
+      .select("contest_date, start_time, end_time")
+      .eq("id", 1)
+      .maybeSingle()
+
+    const window = isContestOpen({
+      contest_date: settings?.contest_date ?? null,
+      start_time: settings?.start_time ?? null,
+      end_time: settings?.end_time ?? null,
+    })
+
+    if (!window.open) {
+      return NextResponse.json(
+        { error: window.reason ?? "지금은 기록할 수 없어요" },
+        { status: 403 },
+      )
+    }
 
     const { data: gc, error: gcError } = await supabase
       .from("grade_counts")

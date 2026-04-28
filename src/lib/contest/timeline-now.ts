@@ -89,3 +89,67 @@ export function formatDurationShort(mins: number): string {
   const m = mins % 60
   return m === 0 ? `${h}시간` : `${h}시간 ${m}분`
 }
+
+const WEEKDAY_KO_FULL = ["일", "월", "화", "수", "목", "금", "토"]
+
+function formatPrettyDate(value: string): string {
+  const d = new Date(`${value}T00:00:00`)
+  if (Number.isNaN(d.getTime())) return value
+  return `${d.getMonth() + 1}월 ${d.getDate()}일(${WEEKDAY_KO_FULL[d.getDay()]})`
+}
+
+export type ContestWindow = {
+  open: boolean
+  reason: string | null
+}
+
+type WindowSettings = {
+  contest_date: string | null
+  start_time: string | null
+  end_time: string | null
+}
+
+export function isContestOpen(
+  settings: WindowSettings,
+  now: Date = new Date(),
+): ContestWindow {
+  if (!settings.contest_date) {
+    return { open: false, reason: "대회 일정이 아직 등록되지 않았어요" }
+  }
+  if (!settings.start_time) {
+    return { open: false, reason: "대회 시작 시각이 아직 등록되지 않았어요" }
+  }
+
+  const today = todayDateStringKST(now)
+  const nowMin = nowMinutesKST(now)
+
+  if (today < settings.contest_date) {
+    return {
+      open: false,
+      reason: `${formatPrettyDate(settings.contest_date)} ${settings.start_time}에 시작합니다`,
+    }
+  }
+
+  if (today > settings.contest_date) {
+    return { open: false, reason: "대회가 종료되었어요" }
+  }
+
+  const startMin = Number(settings.start_time.slice(0, 2)) * 60 + Number(settings.start_time.slice(3, 5))
+  if (nowMin < startMin) {
+    return {
+      open: false,
+      reason: `오늘 ${settings.start_time}에 시작합니다`,
+    }
+  }
+
+  if (settings.end_time) {
+    const endMin =
+      Number(settings.end_time.slice(0, 2)) * 60 +
+      Number(settings.end_time.slice(3, 5))
+    if (nowMin >= endMin) {
+      return { open: false, reason: "대회가 종료되었어요" }
+    }
+  }
+
+  return { open: true, reason: null }
+}
