@@ -1,4 +1,5 @@
 @import "tailwindcss" source("../");
+@import "react-day-picker/style.css";
 
 @theme {
   --color-paper: #fafaf7;
@@ -35,6 +36,47 @@
     0 8px 24px rgba(220, 38, 38, 0.1);
 }
 
+.rdp-root {
+  --rdp-accent-color: var(--color-accent);
+  --rdp-accent-background-color: var(--color-accent-soft);
+  --rdp-day-height: 2.4rem;
+  --rdp-day-width: 2.4rem;
+  --rdp-day_button-border-radius: 9999px;
+  --rdp-selected-border: 2px solid var(--color-accent);
+  --rdp-today-color: var(--color-accent);
+  --rdp-font-family: var(--font-sans);
+  --rdp-weekday-padding: 0.5rem 0;
+  --rdp-weekday-text-transform: none;
+  --rdp-weekday-opacity: 1;
+  font-family: var(--font-sans);
+  color: var(--color-ink-900);
+}
+
+.rdp-month_caption {
+  font-weight: 900;
+}
+
+.rdp-weekday {
+  color: var(--color-ink-500);
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.rdp-day_button:hover:not([disabled]) {
+  background-color: var(--color-mute);
+}
+
+.rdp-selected .rdp-day_button {
+  background-color: var(--color-accent);
+  color: #fff;
+  font-weight: 900;
+}
+
+.rdp-today:not(.rdp-selected) .rdp-day_button {
+  font-weight: 900;
+  color: var(--color-accent);
+}
+
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
@@ -61,7 +103,22 @@
   }
 }
 
+@keyframes dialog-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @layer utilities {
+  .dialog-enter {
+    animation: dialog-up 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
   .num {
     font-feature-settings: "tnum";
     font-variant-numeric: tabular-nums;

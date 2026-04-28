@@ -8,19 +8,25 @@ export default async function AdminHome() {
   await requireAdmin()
   const supabase = createServerClient()
 
-  const [gymsRes, wallsRes, gcRes, partRes, paidRes] = await Promise.all([
-    supabase.from("gyms").select("id", { count: "exact", head: true }),
-    supabase
-      .from("walls")
-      .select("id", { count: "exact", head: true })
-      .eq("active", true),
-    supabase.from("grade_counts").select("total_count"),
-    supabase.from("participants").select("id", { count: "exact", head: true }),
-    supabase
-      .from("participants")
-      .select("id", { count: "exact", head: true })
-      .eq("paid", true),
-  ])
+  const [gymsRes, wallsRes, gcRes, partRes, paidRes, settingsRes] =
+    await Promise.all([
+      supabase.from("gyms").select("id", { count: "exact", head: true }),
+      supabase
+        .from("walls")
+        .select("id", { count: "exact", head: true })
+        .eq("active", true),
+      supabase.from("grade_counts").select("total_count"),
+      supabase.from("participants").select("id", { count: "exact", head: true }),
+      supabase
+        .from("participants")
+        .select("id", { count: "exact", head: true })
+        .eq("paid", true),
+      supabase
+        .from("contest_settings")
+        .select("start_time")
+        .eq("id", 1)
+        .maybeSingle(),
+    ])
 
   const gymCount = gymsRes.count ?? 0
   const wallCount = wallsRes.count ?? 0
@@ -28,6 +34,7 @@ export default async function AdminHome() {
     gcRes.data?.reduce((s, g) => s + (g.total_count ?? 0), 0) ?? 0
   const participantCount = partRes.count ?? 0
   const paidCount = paidRes.count ?? 0
+  const scheduleSet = !!settingsRes.data?.start_time
 
   return (
     <div className="max-w-5xl mx-auto px-5 pt-8 pb-20">
@@ -68,6 +75,13 @@ export default async function AdminHome() {
           title="참가자 · 입금 확인"
           desc="신청자 목록을 확인하고 입금 완료를 표시합니다."
           required={participantCount > paidCount}
+        />
+        <AdminCard
+          href="/admin/schedule"
+          eyebrow="STEP 3"
+          title="대회 일정"
+          desc="시작·종료, 점심시간, 지점별 체류시간을 설정합니다."
+          required={!scheduleSet}
         />
       </div>
     </div>

@@ -22,6 +22,7 @@ export function ParticipantList({ rows }: { rows: ParticipantRow[] }) {
   const [filter, setFilter] = useState<Filter>("all")
   const [query, setQuery] = useState("")
   const [pending, setPending] = useState<Set<string>>(new Set())
+  const [toast, setToast] = useState<string | null>(null)
 
   const stats = useMemo(() => {
     const total = data.length
@@ -67,7 +68,8 @@ export function ParticipantList({ rows }: { rows: ParticipantRow[] }) {
     } catch (err) {
       console.error(err)
       setData((d) => d.map((r) => (r.id === row.id ? { ...r, paid: !next } : r)))
-      window.alert("입금 상태 저장에 실패했어요")
+      setToast("입금 상태 저장에 실패했어요. 잠시 후 다시 시도해주세요.")
+      setTimeout(() => setToast(null), 4000)
     } finally {
       setPending((p) => {
         const next = new Set(p)
@@ -124,6 +126,13 @@ export function ParticipantList({ rows }: { rows: ParticipantRow[] }) {
           className="ml-auto px-3 py-2 bg-surface border border-line focus:border-ink-900 rounded-lg outline-none text-sm font-bold transition w-full sm:w-48 placeholder:font-normal placeholder:text-ink-300"
         />
       </div>
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-ink-900 text-white text-sm font-bold px-4 py-3 rounded-2xl shadow-pop max-w-sm text-center">
+          {toast}
+        </div>
+      )}
 
       {/* List */}
       {filtered.length === 0 ? (

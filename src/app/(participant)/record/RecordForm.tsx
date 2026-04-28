@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useEffect, useMemo, useRef, useState } from "react"
 import type { GymData } from "@/lib/contest/load"
 import type { Category, SolveGrade } from "@/lib/contest/grades"
+import { NumberInputDialog } from "@/components/NumberInputDialog"
 
 type SaveState = "idle" | "saving" | "saved" | "error"
 
@@ -34,6 +35,7 @@ export function RecordForm({
   const [activeGymId, setActiveGymId] = useState<string | null>(initialGymId)
   const [saveState, setSaveState] = useState<SaveState>("idle")
   const [savedAt, setSavedAt] = useState<Date | null>(null)
+  const [editingWallId, setEditingWallId] = useState<string | null>(null)
   const debounceRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
     new Map(),
   )
@@ -86,7 +88,11 @@ export function RecordForm({
         if (!res.ok) throw new Error("save failed")
         const data = await res.json()
         if (typeof data.solved_count === "number") {
-          setCounts((c) => ({ ...c, [wallId]: data.solved_count }))
+          setCounts((c) =>
+            c[wallId] === value && data.solved_count !== value
+              ? { ...c, [wallId]: data.solved_count }
+              : c,
+          )
         }
         setSaveState("saved")
         setSavedAt(new Date())
@@ -110,10 +116,9 @@ export function RecordForm({
     })
   }
 
-  function setExact(wallId: string, raw: string) {
+  function setExactNumber(wallId: string, value: number) {
     const total = wallTotals.get(wallId) ?? 0
-    const parsed = parseInt(raw, 10)
-    const next = isNaN(parsed) ? 0 : Math.max(0, Math.min(parsed, total))
+    const next = Math.max(0, Math.min(Math.floor(value), total))
     setCounts((c) => ({ ...c, [wallId]: next }))
     persist(wallId, next)
   }
@@ -260,13 +265,34 @@ export function RecordForm({
               count={counts[w.id] ?? 0}
               accent={meta.color}
               onAdjust={adjust}
-              onExact={setExact}
+              onOpenEdit={() => setEditingWallId(w.id)}
             />
           ))
         )}
 
         <SaveStatus state={saveState} savedAt={savedAt} />
       </div>
+
+      {editingWallId && (() => {
+        const wall = gyms
+          .flatMap((g) => g.walls)
+          .find((w) => w.id === editingWallId)
+        if (!wall) return null
+        return (
+          <NumberInputDialog
+            open
+            title={`${wall.name} 풀이 갯수`}
+            subtitle={`${meta.solveLabel} · 전체 ${wall.total_count}개`}
+            initialValue={counts[wall.id] ?? 0}
+            total={wall.total_count}
+            onConfirm={(v) => {
+              setExactNumber(wall.id, v)
+              setEditingWallId(null)
+            }}
+            onCancel={() => setEditingWallId(null)}
+          />
+        )
+      })()}
     </div>
   )
 }
@@ -278,7 +304,7 @@ function WallCard({
   count,
   accent,
   onAdjust,
-  onExact,
+  onOpenEdit,
 }: {
   wallId: string
   name: string
@@ -286,7 +312,7 @@ function WallCard({
   count: number
   accent: string
   onAdjust: (id: string, delta: number) => void
-  onExact: (id: string, raw: string) => void
+  onOpenEdit: () => void
 }) {
   const ratio = total > 0 ? Math.round((count / total) * 100) : 0
   const minusDisabled = count <= 0 || total === 0
@@ -294,8 +320,7 @@ function WallCard({
 
   function handleEdit() {
     if (total === 0) return
-    const v = window.prompt(`${name} - 직접 입력 (0~${total})`, String(count))
-    if (v !== null) onExact(wallId, v)
+    onOpenEdit()
   }
 
   return (

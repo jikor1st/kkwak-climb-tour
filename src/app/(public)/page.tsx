@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { auth } from '@/lib/auth/auth'
+import { createServerClient } from '@/lib/supabase/server'
+import { formatHHMM } from '@/lib/contest/schedule'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,6 +48,23 @@ export default async function LandingPage({
   const { error } = await searchParams
   const showForbidden = error === 'forbidden'
 
+  const supabase = createServerClient()
+  const { data: cs } = await supabase
+    .from('contest_settings')
+    .select('contest_date, start_time, end_time')
+    .eq('id', 1)
+    .maybeSingle()
+
+  const contestDate = cs?.contest_date ?? null
+  const startLabel = formatHHMM(cs?.start_time ?? null)
+  const endLabel = formatHHMM(cs?.end_time ?? null)
+  const dateBadge = formatDateBadge(contestDate)
+  const dateBig = formatDateBig(contestDate)
+  const dateSub =
+    startLabel && endLabel
+      ? `${formatWeekday(contestDate)} ${startLabel}~${endLabel}`
+      : formatWeekday(contestDate)
+
   const primaryCta = hasParticipant
     ? { href: '/dashboard', label: '내 대시보드로' }
     : isLoggedIn
@@ -81,7 +100,7 @@ export default async function LandingPage({
         <div className="max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent-soft border border-accent/20 mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-            <span className="text-xs text-accent font-bold tracking-wider">2026.05.10 SAT</span>
+            <span className="text-xs text-accent font-bold tracking-wider">{dateBadge}</span>
           </div>
 
           <h1 className="text-[40px] leading-[1.1] sm:text-6xl sm:leading-[1.05] font-black tracking-tight">
@@ -154,7 +173,7 @@ export default async function LandingPage({
       <div className="max-w-3xl mx-auto px-5 pb-12 sm:pb-14">
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: '일시', big: '5월 10일', sub: '토 09:30~16:50' },
+            { label: '일시', big: dateBig, sub: dateSub },
             { label: '참가비', big: '10,000원', sub: '크루·게스트 동일', num: true },
             { label: '시상', big: '2명', sub: '상급 1, 중·초급 1' },
             { label: '채점', big: '완등 비율', sub: '양심 기록' },
@@ -349,4 +368,33 @@ export default async function LandingPage({
       </section>
     </div>
   )
+}
+
+const WEEKDAY_KO = ['일', '월', '화', '수', '목', '금', '토']
+const WEEKDAY_EN = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
+
+function parseDate(value: string | null): Date | null {
+  if (!value) return null
+  const d = new Date(`${value}T00:00:00`)
+  return Number.isNaN(d.getTime()) ? null : d
+}
+
+function formatDateBadge(value: string | null): string {
+  const d = parseDate(value)
+  if (!d) return '일정 미정'
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${yyyy}.${mm}.${dd} ${WEEKDAY_EN[d.getDay()]}`
+}
+
+function formatDateBig(value: string | null): string {
+  const d = parseDate(value)
+  if (!d) return '미정'
+  return `${d.getMonth() + 1}월 ${d.getDate()}일`
+}
+
+function formatWeekday(value: string | null): string {
+  const d = parseDate(value)
+  return d ? WEEKDAY_KO[d.getDay()] : ''
 }

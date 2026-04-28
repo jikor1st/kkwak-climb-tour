@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { requireAdmin } from "@/lib/auth/guards"
 import { signOut } from "@/lib/auth/auth"
+import { ModeToggle } from "@/components/ModeToggle"
 
 export default async function AdminLayout({
   children,
@@ -12,19 +13,19 @@ export default async function AdminLayout({
   return (
     <div className="min-h-screen bg-paper">
       <header className="sticky top-0 z-40 bg-paper/95 backdrop-blur-md border-b border-line">
-        <div className="max-w-5xl mx-auto px-5 h-12 flex items-center justify-between gap-3">
-          <Link href="/admin" className="flex items-center gap-2 group shrink-0">
-            <span className="text-[10px] uppercase tracking-[0.2em] font-black text-accent">
-              꽉크루 2026
-            </span>
-            <span className="text-ink-300 text-xs">·</span>
-            <span className="text-xs font-bold text-ink-700 group-hover:text-ink-900 transition">
-              운영자
-            </span>
-          </Link>
-          <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+        <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 shrink-0">
+            <Link href="/admin" className="flex items-center gap-1.5 group">
+              <span className="text-[10px] uppercase tracking-[0.2em] font-black text-accent">
+                꽉크루 2026
+              </span>
+            </Link>
+            <ModeToggle current="admin" />
+          </div>
+          <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar flex-1 justify-end">
             <NavLink href="/admin/walls">벽·문제수</NavLink>
             <NavLink href="/admin/participants">참가자</NavLink>
+            <NavLink href="/admin/schedule">일정</NavLink>
             <form
               action={async () => {
                 "use server"

@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { requireAuth } from "@/lib/auth/guards"
 import { signOut } from "@/lib/auth/auth"
+import { ModeToggle } from "@/components/ModeToggle"
 
 export default async function ParticipantLayout({
   children,
@@ -13,26 +14,24 @@ export default async function ParticipantLayout({
   return (
     <div className="min-h-screen bg-paper">
       <header className="sticky top-0 z-40 bg-paper/95 backdrop-blur-md border-b border-line">
-        <div className="max-w-3xl mx-auto px-5 h-12 flex items-center justify-between">
-          <Link href="/dashboard" className="flex items-center gap-2 group">
+        <div className="max-w-3xl mx-auto px-5 h-14 flex items-center justify-between gap-3">
+          <Link href="/dashboard" className="flex items-center gap-1.5 group shrink-0">
             <span className="text-[10px] uppercase tracking-[0.2em] font-black text-accent">
               꽉크루 2026
             </span>
-            <span className="text-ink-300 text-xs">·</span>
-            <span className="text-xs font-bold text-ink-700 group-hover:text-ink-900 transition">
+            <span className="hidden sm:inline text-ink-300 text-xs">·</span>
+            <span className="hidden sm:inline text-xs font-bold text-ink-700 group-hover:text-ink-900 transition">
               참가자
             </span>
           </Link>
-          <div className="flex items-center gap-3">
-            {isAdmin && (
-              <Link
-                href="/admin"
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-ink-900 text-white text-[11px] font-black hover:bg-accent transition"
-              >
-                <span className="w-1 h-1 rounded-full bg-accent" />
-                운영자 콘솔
-              </Link>
-            )}
+          {isAdmin && <ModeToggle current="participant" />}
+          <div className="flex items-center gap-3 shrink-0">
+            <Link
+              href="/ranking"
+              className="text-xs text-ink-500 hover:text-ink-900 transition font-bold whitespace-nowrap"
+            >
+              순위
+            </Link>
             <form
               action={async () => {
                 "use server"

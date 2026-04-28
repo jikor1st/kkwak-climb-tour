@@ -19,12 +19,22 @@ export type GymData = {
   duration_minutes: number
 }
 
+export type ContestSettings = {
+  start_time: string | null
+  end_time: string | null
+  default_gym_minutes: number
+  lunch_minutes: number
+  lunch_start_time: string | null
+  contest_date: string | null
+}
+
 export type ContestData = {
   gyms: GymData[]
   totalSolved: number
   totalCount: number
   completionRate: number
   grade: SolveGrade
+  settings: ContestSettings
 }
 
 export async function loadContestData(
@@ -59,7 +69,9 @@ export async function loadContestData(
         .select("gym_id, duration_minutes"),
       supabase
         .from("contest_settings")
-        .select("default_gym_minutes")
+        .select(
+          "start_time, end_time, default_gym_minutes, lunch_minutes, lunch_start_time, contest_date",
+        )
         .eq("id", 1)
         .maybeSingle(),
     ])
@@ -75,7 +87,16 @@ export async function loadContestData(
   const durationByGym = new Map<string, number>(
     (durRes.data ?? []).map((d) => [d.gym_id, d.duration_minutes]),
   )
-  const defaultMinutes = settingsRes.data?.default_gym_minutes ?? 45
+  const settingsRow = settingsRes.data ?? null
+  const defaultMinutes = settingsRow?.default_gym_minutes ?? 45
+  const settings: ContestSettings = {
+    start_time: settingsRow?.start_time ?? null,
+    end_time: settingsRow?.end_time ?? null,
+    default_gym_minutes: defaultMinutes,
+    lunch_minutes: settingsRow?.lunch_minutes ?? 60,
+    lunch_start_time: settingsRow?.lunch_start_time ?? null,
+    contest_date: settingsRow?.contest_date ?? null,
+  }
 
   const gymsData: GymData[] = gyms.map((g) => {
     const gymWalls: WallData[] = walls
@@ -113,5 +134,6 @@ export async function loadContestData(
     totalCount,
     completionRate,
     grade,
+    settings,
   }
 }

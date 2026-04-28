@@ -1,6 +1,8 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
+import { TextInputDialog } from "@/components/TextInputDialog"
+import { ConfirmDialog } from "@/components/ConfirmDialog"
 
 type Gym = { id: string; name: string; display_order: number }
 type Wall = {
@@ -39,6 +41,8 @@ export function WallsEditor({
   const [saveState, setSaveState] = useState<SaveState>("idle")
   const [saveError, setSaveError] = useState<string>("")
   const [savedAt, setSavedAt] = useState<Date | null>(null)
+  const [addingForGymId, setAddingForGymId] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Wall | null>(null)
   const debounceRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
   const inflightRef = useRef(0)
 
@@ -87,15 +91,13 @@ export function WallsEditor({
     return () => debounceRef.current.forEach((t) => clearTimeout(t))
   }, [])
 
-  async function addWall(gymId: string) {
-    const name = window.prompt("새 벽 이름 (예: 1번 벽, 슬랩벽)")
-    if (!name?.trim()) return
+  async function addWallWithName(gymId: string, name: string) {
     flagSaving()
     try {
       const res = await fetch("/api/admin/walls", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gym_id: gymId, name: name.trim() }),
+        body: JSON.stringify({ gym_id: gymId, name }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || "생성 실패")
@@ -162,9 +164,7 @@ export function WallsEditor({
     persistCount(wallId, grade, v)
   }
 
-  async function deleteWall(wall: Wall) {
-    if (!window.confirm(`"${wall.name}" 벽을 삭제할까요? 관련 등급별 문제 수도 함께 삭제됩니다.`))
-      return
+  async function deleteWallConfirmed(wall: Wall) {
     flagSaving()
     try {
       const res = await fetch(`/api/admin/walls/${wall.id}`, { method: "DELETE" })
@@ -236,7 +236,7 @@ export function WallsEditor({
                 </div>
                 <button
                   type="button"
-                  onClick={() => addWall(gym.id)}
+                  onClick={() => setAddingForGymId(gym.id)}
                   className="px-3 py-2 rounded-lg bg-accent hover:bg-accent/90 text-white text-xs font-black shadow-pop transition active:scale-95"
                 >
                   + 벽 추가
@@ -248,7 +248,7 @@ export function WallsEditor({
                   아직 등록된 벽이 없어요.{" "}
                   <button
                     type="button"
-                    onClick={() => addWall(gym.id)}
+                    onClick={() => setAddingForGymId(gym.id)}
                     className="text-accent font-black hover:underline"
                   >
                     + 첫 벽 추가하기
@@ -280,7 +280,7 @@ export function WallsEditor({
                         onCountChange={(grade, raw) =>
                           setCount(wall.id, grade, raw)
                         }
-                        onDelete={() => deleteWall(wall)}
+                        onDelete={() => setDeleteTarget(wall)}
                       />
                     ))}
                   </ul>
@@ -295,6 +295,47 @@ export function WallsEditor({
         모든 변경사항은 자동 저장됩니다. 입력 후 다른 곳을 클릭하거나 잠시
         기다리면 저장돼요.
       </p>
+
+      <TextInputDialog
+        open={addingForGymId !== null}
+        title="새 벽 추가"
+        subtitle={
+          addingForGymId
+            ? `${gyms.find((g) => g.id === addingForGymId)?.name ?? ""}점에 벽을 추가합니다`
+            : undefined
+        }
+        placeholder="예: 1번 벽, 슬랩벽"
+        confirmLabel="추가"
+        onConfirm={(name) => {
+          const gymId = addingForGymId
+          setAddingForGymId(null)
+          if (gymId) addWallWithName(gymId, name)
+        }}
+        onCancel={() => setAddingForGymId(null)}
+      />
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="벽을 삭제할까요?"
+        variant="danger"
+        confirmLabel="삭제"
+        message={
+          deleteTarget ? (
+            <>
+              <strong className="text-ink-900">{deleteTarget.name}</strong> 벽과
+              연결된 빨강·파랑·초록 문제 수가 함께 삭제됩니다. 이 작업은 되돌릴 수
+              없어요.
+            </>
+          ) : null
+        }
+        onConfirm={() => {
+          const w = deleteTarget
+          setDeleteTarget(null)
+          if (w) deleteWallConfirmed(w)
+        }}
+        onCancel={() => setDeleteTarget(null)}
+      />
+
     </div>
   )
 }

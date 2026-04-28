@@ -7,6 +7,9 @@ import {
   GRADE_LABEL,
   type Category,
 } from "@/lib/contest/grades"
+import { buildTimeline } from "@/lib/contest/schedule"
+import { CurrentScheduleStatus } from "@/components/CurrentScheduleStatus"
+import { TimelineList } from "@/components/TimelineList"
 
 export const dynamic = "force-dynamic"
 
@@ -19,9 +22,29 @@ export default async function DashboardPage() {
   )
   const meta = CATEGORY_META[participant.category as Category]
   const noWalls = contest.totalCount === 0
+  const timeline = buildTimeline(
+    contest.settings,
+    contest.gyms.map((g) => ({
+      id: g.id,
+      name: g.name,
+      display_order: g.display_order,
+      duration_minutes: g.duration_minutes,
+    })),
+  )
+  const contestDateLabel = formatContestDate(contest.settings.contest_date)
+  const startEndLabel =
+    timeline.startLabel && (timeline.endLabel ?? timeline.computedEndLabel)
+      ? `${timeline.startLabel} — ${timeline.endLabel ?? timeline.computedEndLabel}`
+      : "미정"
 
   return (
     <div className="max-w-3xl mx-auto px-5 pt-6 pb-20">
+      {/* 현재 일정 상태 */}
+      <CurrentScheduleStatus
+        timeline={timeline}
+        contestDate={contest.settings.contest_date}
+      />
+
       {/* Hero card */}
       <div className="relative overflow-hidden bg-surface border border-line rounded-3xl p-6 sm:p-7 shadow-card mb-4">
         <div
@@ -98,12 +121,20 @@ export default async function DashboardPage() {
             />
           </div>
 
-          <Link
-            href="/record"
-            className="mt-6 w-full inline-flex items-center justify-center gap-2 py-4 bg-accent hover:bg-accent/90 transition rounded-xl font-black text-white text-base shadow-pop"
-          >
-            풀이 기록하기 →
-          </Link>
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+            <Link
+              href="/record"
+              className="inline-flex items-center justify-center gap-2 py-4 bg-accent hover:bg-accent/90 transition rounded-xl font-black text-white text-base shadow-pop"
+            >
+              풀이 기록하기 →
+            </Link>
+            <Link
+              href="/ranking"
+              className="inline-flex items-center justify-center gap-2 py-4 px-5 bg-ink-900 hover:bg-ink-700 transition rounded-xl font-black text-white text-sm"
+            >
+              전체 순위 →
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -190,18 +221,18 @@ export default async function DashboardPage() {
       </div>
 
       {/* 대회 정보 */}
-      <div className="bg-surface border border-line rounded-2xl p-5 shadow-soft">
+      <div className="bg-surface border border-line rounded-2xl p-5 shadow-soft mb-4">
         <div className="text-xs text-ink-500 uppercase tracking-wider mb-3 font-black">
           대회 정보
         </div>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-ink-500">일시</span>
-            <span className="font-black">2026년 5월 10일 (토)</span>
+            <span className="font-black">{contestDateLabel}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-ink-500">시간</span>
-            <span className="font-black num">09:30 — 16:50</span>
+            <span className="font-black num">{startEndLabel}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-ink-500">참가 유형</span>
@@ -210,6 +241,17 @@ export default async function DashboardPage() {
             </span>
           </div>
         </div>
+      </div>
+
+      {/* 일정 타임라인 */}
+      <div className="bg-surface border border-line rounded-2xl p-5 shadow-soft">
+        <div className="text-xs text-ink-500 uppercase tracking-wider mb-3 font-black">
+          전체 일정
+        </div>
+        <TimelineList
+          timeline={timeline}
+          contestDate={contest.settings.contest_date}
+        />
       </div>
 
       <div className="mt-6 text-center">
@@ -222,4 +264,13 @@ export default async function DashboardPage() {
       </div>
     </div>
   )
+}
+
+const WEEKDAY_KO = ["일", "월", "화", "수", "목", "금", "토"]
+
+function formatContestDate(value: string | null): string {
+  if (!value) return "미정"
+  const d = new Date(`${value}T00:00:00`)
+  if (Number.isNaN(d.getTime())) return value
+  return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 (${WEEKDAY_KO[d.getDay()]})`
 }
