@@ -1,36 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# THE CLIMB TOUR 2026
 
-## Getting Started
+강남권 더클 뿌수기 대회 - 꽉크루 클라이밍 투어 대회 운영 웹앱
 
-First, run the development server:
+## 개발 환경 설정
+
+### 1. 환경 변수 설정
+
+`.env.local` 파일에서 다음 값들을 설정해주세요:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Supabase 설정 (https://supabase.com/dashboard/project/[PROJECT_ID]/settings/api)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+
+# next-auth 설정
+AUTH_SECRET=your-auth-secret-here  # openssl rand -base64 32로 생성
+AUTH_URL=http://localhost:3000
+
+# 카카오 OAuth 설정 (https://developers.kakao.com/console/app)
+KAKAO_CLIENT_ID=your-kakao-rest-api-key-here
+KAKAO_CLIENT_SECRET=your-kakao-client-secret-here
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Supabase 데이터베이스 설정
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. https://supabase.com에서 새 프로젝트 생성 (서울 리전 권장)
+2. SQL Editor에서 `database/0001_initial.sql` 파일 내용 실행
+3. API 키들을 `.env.local`에 복사
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. 카카오 디벨로퍼 콘솔 설정
 
-## Learn More
+1. https://developers.kakao.com에서 앱 생성
+2. 카카오 로그인 활성화
+3. Redirect URI 설정: `http://localhost:3000/api/auth/callback/kakao`
+4. 동의 항목: 닉네임 (필수)
+5. REST API 키와 Client Secret을 `.env.local`에 복사
 
-To learn more about Next.js, take a look at the following resources:
+### 4. 로컬 실행
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm install
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+http://localhost:3000에서 확인
 
-## Deploy on Vercel
+### 5. 어드민 권한 부여
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+첫 번째 사용자가 가입한 후, Supabase 콘솔에서 직접 수정:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```sql
+UPDATE users SET role = 'admin' WHERE kakao_id = 'YOUR_KAKAO_ID';
+```
+
+## 프로젝트 구조
+
+```
+src/
+├── app/
+│   ├── (public)/           # 비로그인 접근 가능
+│   │   ├── page.tsx        # 랜딩 페이지
+│   │   └── login/
+│   ├── (participant)/      # 로그인 + 참가자
+│   │   ├── signup/         # 참가 신청
+│   │   ├── input/          # 풀이 기록
+│   │   └── dashboard/      # 대시보드
+│   ├── (admin)/           # 어드민 전용
+│   │   └── admin/         # 어드민 페이지들
+│   └── api/               # API 엔드포인트
+├── lib/
+│   ├── auth/              # 인증 관련
+│   └── supabase/          # DB 클라이언트
+└── components/            # 재사용 컴포넌트
+```
+
+## Phase 1 체크리스트
+
+- [x] Next.js 프로젝트 초기화
+- [x] Supabase 데이터베이스 설정
+- [x] 카카오 OAuth 설정
+- [x] next-auth 구성
+- [x] 권한 가드 구현
+- [x] 미들웨어 설정
+- [x] 랜딩 페이지 구현
+- [x] 로그인 페이지 구현
+- [ ] 카카오 로그인 테스트
+- [ ] 데이터베이스 연결 테스트
+
+## 다음 단계 (Phase 2)
+
+1. 참가 신청 페이지 구현
+2. API 엔드포인트 개발
+3. 폼 검증 로직
+4. 신청 완료 페이지
+
+## 기술 스택
+
+- **Frontend**: Next.js 14, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: next-auth v5 + Kakao OAuth
+- **State Management**: Zustand
+- **Form Handling**: React Hook Form + Zod
+- **Deployment**: Vercel + Supabase
+# kkwak-climb-tour
