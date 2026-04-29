@@ -83,6 +83,12 @@ export default async function AdminHome() {
           desc="시작·종료, 점심시간, 지점별 체류시간을 설정합니다."
           required={!scheduleSet}
         />
+        <AdminCard
+          href="/admin/notice"
+          eyebrow="STEP 4"
+          title="참가 신청 안내문구"
+          desc="신청 직전 확인 다이얼로그에 보일 입금 계좌·안내 문구를 작성합니다."
+        />
       </div>
     </div>
   )

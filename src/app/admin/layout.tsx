@@ -26,6 +26,7 @@ export default async function AdminLayout({
             <NavLink href="/admin/walls">벽·문제수</NavLink>
             <NavLink href="/admin/participants">참가자</NavLink>
             <NavLink href="/admin/schedule">일정</NavLink>
+            <NavLink href="/admin/notice">안내문구</NavLink>
             <Link
               href="/"
               className="text-xs text-ink-500 hover:text-ink-900 transition font-bold ml-2 shrink-0 whitespace-nowrap"
