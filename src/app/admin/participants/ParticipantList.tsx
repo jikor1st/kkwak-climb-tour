@@ -13,13 +13,21 @@ export type ParticipantRow = {
   participant_type: string
   paid: boolean
   created_at: string
+  user_id: string
+  role: "admin" | "participant"
 }
 
 type Filter = "all" | "unpaid" | "paid"
 
 const CATEGORY_ORDER = ["advanced", "intermediate", "beginner"] as const
 
-export function ParticipantList({ rows }: { rows: ParticipantRow[] }) {
+export function ParticipantList({
+  rows,
+  currentUserId,
+}: {
+  rows: ParticipantRow[]
+  currentUserId: string
+}) {
   const [data, setData] = useState(rows)
   const [filter, setFilter] = useState<Filter>("all")
   const [query, setQuery] = useState("")
@@ -27,6 +35,7 @@ export function ParticipantList({ rows }: { rows: ParticipantRow[] }) {
   const [toast, setToast] = useState<string | null>(null)
   const [editTarget, setEditTarget] = useState<ParticipantRow | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<ParticipantRow | null>(null)
+  const [roleTarget, setRoleTarget] = useState<ParticipantRow | null>(null)
 
   function showToast(msg: string) {
     setToast(msg)
@@ -58,6 +67,42 @@ export function ParticipantList({ rows }: { rows: ParticipantRow[] }) {
       setPending((p) => {
         const next = new Set(p)
         next.delete(id)
+        return next
+      })
+    }
+  }
+
+  async function changeRole(row: ParticipantRow) {
+    const nextRole: "admin" | "participant" =
+      row.role === "admin" ? "participant" : "admin"
+    setData((d) =>
+      d.map((r) => (r.id === row.id ? { ...r, role: nextRole } : r)),
+    )
+    setPending((p) => new Set(p).add(row.id))
+    try {
+      const res = await fetch(`/api/admin/participants/${row.id}/role`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: nextRole }),
+      })
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}))
+        throw new Error(e.error ?? "권한 변경 실패")
+      }
+      showToast(
+        nextRole === "admin"
+          ? `${row.display_name}님에게 어드민 권한을 부여했어요`
+          : `${row.display_name}님의 어드민 권한을 해제했어요`,
+      )
+    } catch (err) {
+      setData((d) =>
+        d.map((r) => (r.id === row.id ? { ...r, role: row.role } : r)),
+      )
+      showToast(err instanceof Error ? err.message : "권한 변경 실패")
+    } finally {
+      setPending((p) => {
+        const next = new Set(p)
+        next.delete(row.id)
         return next
       })
     }
@@ -205,6 +250,41 @@ export function ParticipantList({ rows }: { rows: ParticipantRow[] }) {
       />
 
       <ConfirmDialog
+        open={roleTarget !== null}
+        title={
+          roleTarget?.role === "admin"
+            ? "어드민 권한을 해제할까요?"
+            : "어드민 권한을 부여할까요?"
+        }
+        variant={roleTarget?.role === "admin" ? "danger" : "default"}
+        confirmLabel={
+          roleTarget?.role === "admin" ? "권한 해제" : "어드민 부여"
+        }
+        message={
+          roleTarget ? (
+            roleTarget.role === "admin" ? (
+              <>
+                <strong className="text-ink-900">{roleTarget.display_name}</strong>{" "}
+                참가자가 더 이상 어드민 페이지에 접근할 수 없게 돼요.
+              </>
+            ) : (
+              <>
+                <strong className="text-ink-900">{roleTarget.display_name}</strong>{" "}
+                참가자에게 어드민 권한을 부여하면 참가자/입금/일정/벽 정보를 모두
+                수정할 수 있어요.
+              </>
+            )
+          ) : null
+        }
+        onConfirm={() => {
+          const t = roleTarget
+          setRoleTarget(null)
+          if (t) changeRole(t)
+        }}
+        onCancel={() => setRoleTarget(null)}
+      />
+
+      <ConfirmDialog
         open={deleteTarget !== null}
         title="이 참가자를 삭제할까요?"
         variant="danger"
@@ -274,6 +354,11 @@ export function ParticipantList({ rows }: { rows: ParticipantRow[] }) {
                             <span className="text-[10px] font-bold text-ink-500 px-1.5 py-0.5 rounded bg-mute">
                               {row.participant_type === "crew" ? "꽉크루" : "게스트"}
                             </span>
+                            {row.role === "admin" && (
+                              <span className="text-[10px] font-black text-white bg-ink-900 px-1.5 py-0.5 rounded">
+                                ADMIN
+                              </span>
+                            )}
                             <span
                               className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border"
                               style={{
@@ -315,6 +400,34 @@ export function ParticipantList({ rows }: { rows: ParticipantRow[] }) {
                           title="수정"
                         >
                           ✎
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setRoleTarget(row)}
+                          disabled={
+                            pending.has(row.id) ||
+                            row.user_id === currentUserId ||
+                            !row.user_id
+                          }
+                          className={`shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition disabled:opacity-30 disabled:cursor-not-allowed ${
+                            row.role === "admin"
+                              ? "text-ink-900 bg-mute hover:bg-line"
+                              : "text-ink-500 hover:text-ink-900 hover:bg-mute"
+                          }`}
+                          aria-label={
+                            row.role === "admin"
+                              ? "어드민 권한 해제"
+                              : "어드민 권한 부여"
+                          }
+                          title={
+                            row.user_id === currentUserId
+                              ? "본인 권한은 변경할 수 없어요"
+                              : row.role === "admin"
+                                ? "어드민 권한 해제"
+                                : "어드민 권한 부여"
+                          }
+                        >
+                          {row.role === "admin" ? "★" : "☆"}
                         </button>
                         <button
                           type="button"
