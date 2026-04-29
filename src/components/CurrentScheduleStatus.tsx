@@ -8,6 +8,7 @@ import {
   nowSecondsKST,
   todayDateStringKST,
 } from "@/lib/contest/timeline-now"
+import { GymIcon } from "@/components/icons/GymIcon"
 
 type Props = {
   timeline: Timeline
@@ -95,9 +96,12 @@ export function CurrentScheduleStatus({ timeline, contestDate }: Props) {
           </div>
           <div className="text-sm text-ink-500 mb-0.5 font-bold">남았어요</div>
         </div>
-        <div className="text-xs text-ink-700 mt-2">
-          첫 일정 ·{" "}
-          <strong className="text-ink-900">{status.firstStop.name}</strong>{" "}
+        <div className="text-xs text-ink-700 mt-2 flex items-center gap-1.5 flex-wrap">
+          <span>첫 일정 ·</span>
+          {status.firstStop.type === "gym" && (
+            <GymIcon className="w-3 h-3 text-ink-900" />
+          )}
+          <strong className="text-ink-900">{status.firstStop.name}</strong>
           <span className="num">{status.firstStop.start}</span>
         </div>
       </Wrap>
@@ -122,17 +126,13 @@ export function CurrentScheduleStatus({ timeline, contestDate }: Props) {
 
   // active
   const isBreak = status.stop.type === "break"
+  const isGym = status.stop.type === "gym"
   const totalSec = status.totalSec
   const progress = totalSec > 0 ? (status.elapsedSec / totalSec) * 100 : 0
   const remainingSec = status.remainingSec
   const isCritical = remainingSec <= 60
   const isWarning = !isCritical && remainingSec <= 5 * 60
   const next = status.next
-
-  const routeLabel =
-    isBreak && status.prevGym && status.nextGym
-      ? `${status.prevGym.name} → ${status.nextGym.name}`
-      : null
 
   return (
     <Wrap kind={isBreak ? "break" : "active"}>
@@ -143,12 +143,25 @@ export function CurrentScheduleStatus({ timeline, contestDate }: Props) {
         <LiveBadge tone="white" />
       </div>
 
-      {routeLabel ? (
+      {isBreak && status.prevGym && status.nextGym ? (
         <div className="mb-3">
           <div className="text-[11px] opacity-80 font-bold mb-1">경로</div>
-          <div className="text-xl sm:text-2xl font-black leading-tight">
-            {routeLabel}
+          <div className="text-xl sm:text-2xl font-black leading-tight flex items-center gap-2 flex-wrap">
+            <span className="inline-flex items-center gap-1.5">
+              <GymIcon className="w-5 h-5 opacity-80" />
+              {status.prevGym.name}
+            </span>
+            <span className="opacity-70">→</span>
+            <span className="inline-flex items-center gap-1.5">
+              <GymIcon className="w-5 h-5 opacity-80" />
+              {status.nextGym.name}
+            </span>
           </div>
+        </div>
+      ) : isGym ? (
+        <div className="text-3xl sm:text-4xl font-black leading-none mb-3 flex items-center gap-2.5">
+          <GymIcon className="w-7 h-7 sm:w-8 sm:h-8 opacity-90" />
+          <span>{status.stop.name}</span>
         </div>
       ) : (
         <div className="text-3xl sm:text-4xl font-black leading-none mb-3">
@@ -188,6 +201,7 @@ export function CurrentScheduleStatus({ timeline, contestDate }: Props) {
       {next && (
         <div className="text-[11px] opacity-90 flex items-center gap-1.5 flex-wrap">
           <span>다음:</span>
+          {next.type === "gym" && <GymIcon className="w-3 h-3" />}
           <strong className="font-black">{next.name}</strong>
           <span className="num opacity-80">
             {next.start} ~ {next.end}
