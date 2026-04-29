@@ -114,9 +114,52 @@
   }
 }
 
+@keyframes live-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.85);
+  }
+}
+
+@keyframes live-ring {
+  0% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+}
+
+@keyframes urgent-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+
 @layer utilities {
   .dialog-enter {
     animation: dialog-up 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .live-dot {
+    animation: live-pulse 1.6s ease-in-out infinite;
+  }
+
+  .live-dot-ring {
+    animation: live-ring 1.6s ease-out infinite;
+  }
+
+  .urgent-pulse {
+    animation: urgent-pulse 1s ease-in-out infinite;
   }
 
   .num {

@@ -1,4 +1,4 @@
-import type { Timeline, TimelineStop } from "./schedule"
+import type { Timeline, TimelineGymStop, TimelineStop } from "./schedule"
 
 export type CurrentStatus =
   | { kind: "no-schedule" }
@@ -17,6 +17,26 @@ export type CurrentStatus =
     }
   | { kind: "after"; endLabel: string | null }
 
+export type CurrentStatusSec =
+  | { kind: "no-schedule" }
+  | {
+      kind: "before"
+      secondsUntilStart: number
+      firstStop: TimelineStop
+    }
+  | {
+      kind: "active"
+      stop: TimelineStop
+      next: TimelineStop | null
+      prevGym: TimelineGymStop | null
+      nextGym: TimelineGymStop | null
+      elapsedSec: number
+      remainingSec: number
+      totalSec: number
+      stopIndex: number
+    }
+  | { kind: "after"; endLabel: string | null }
+
 const TIME_RE = /^(\d{2}):(\d{2})/
 
 function parseHHMM(value: string): number | null {
@@ -29,6 +49,12 @@ export function nowMinutesKST(date: Date = new Date()): number {
   const utc = date.getTime() + date.getTimezoneOffset() * 60_000
   const kst = new Date(utc + 9 * 60 * 60_000)
   return kst.getHours() * 60 + kst.getMinutes()
+}
+
+export function nowSecondsKST(date: Date = new Date()): number {
+  const utc = date.getTime() + date.getTimezoneOffset() * 60_000
+  const kst = new Date(utc + 9 * 60 * 60_000)
+  return kst.getHours() * 3600 + kst.getMinutes() * 60 + kst.getSeconds()
 }
 
 export function todayDateStringKST(date: Date = new Date()): string {
@@ -88,6 +114,81 @@ export function formatDurationShort(mins: number): string {
   const h = Math.floor(mins / 60)
   const m = mins % 60
   return m === 0 ? `${h}시간` : `${h}시간 ${m}분`
+}
+
+export function formatCountdown(totalSec: number): string {
+  const s = Math.max(0, Math.floor(totalSec))
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const sec = s % 60
+  const pad = (n: number) => String(n).padStart(2, "0")
+  if (h > 0) return `${h}:${pad(m)}:${pad(sec)}`
+  return `${pad(m)}:${pad(sec)}`
+}
+
+export function computeCurrentStatusSec(
+  timeline: Timeline,
+  nowSec: number,
+): CurrentStatusSec {
+  if (!timeline.hasStartTime || timeline.stops.length === 0) {
+    return { kind: "no-schedule" }
+  }
+
+  const firstStop = timeline.stops[0]
+  const firstStartMin = parseHHMM(firstStop.start)
+  if (firstStartMin == null) return { kind: "no-schedule" }
+  const firstStartSec = firstStartMin * 60
+
+  if (nowSec < firstStartSec) {
+    return {
+      kind: "before",
+      secondsUntilStart: firstStartSec - nowSec,
+      firstStop,
+    }
+  }
+
+  for (let i = 0; i < timeline.stops.length; i++) {
+    const stop = timeline.stops[i]
+    const startMin = parseHHMM(stop.start)
+    const endMin = parseHHMM(stop.end)
+    if (startMin == null || endMin == null) continue
+    const startSec = startMin * 60
+    const endSec = endMin * 60
+    if (startSec <= nowSec && nowSec < endSec) {
+      let prevGym: TimelineGymStop | null = null
+      for (let j = i - 1; j >= 0; j--) {
+        const s = timeline.stops[j]
+        if (s.type === "gym") {
+          prevGym = s
+          break
+        }
+      }
+      let nextGym: TimelineGymStop | null = null
+      for (let j = i + 1; j < timeline.stops.length; j++) {
+        const s = timeline.stops[j]
+        if (s.type === "gym") {
+          nextGym = s
+          break
+        }
+      }
+      return {
+        kind: "active",
+        stop,
+        next: timeline.stops[i + 1] ?? null,
+        prevGym,
+        nextGym,
+        elapsedSec: nowSec - startSec,
+        remainingSec: endSec - nowSec,
+        totalSec: endSec - startSec,
+        stopIndex: i,
+      }
+    }
+  }
+
+  return {
+    kind: "after",
+    endLabel: timeline.endLabel ?? timeline.computedEndLabel,
+  }
 }
 
 const WEEKDAY_KO_FULL = ["일", "월", "화", "수", "목", "금", "토"]

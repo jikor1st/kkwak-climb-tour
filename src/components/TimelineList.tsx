@@ -26,10 +26,33 @@ export function TimelineList({
 
   useEffect(() => {
     if (!showCurrentMarker) return
-    const id = setInterval(() => {
+
+    let id: ReturnType<typeof setInterval> | null = null
+    const sync = () => {
       setNow({ min: nowMinutesKST(), date: todayDateStringKST() })
-    }, 30_000)
-    return () => clearInterval(id)
+    }
+    const start = () => {
+      sync()
+      if (id != null) clearInterval(id)
+      id = setInterval(sync, 30_000)
+    }
+    const stop = () => {
+      if (id != null) {
+        clearInterval(id)
+        id = null
+      }
+    }
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") start()
+      else stop()
+    }
+
+    start()
+    document.addEventListener("visibilitychange", onVisibility)
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility)
+      stop()
+    }
   }, [showCurrentMarker])
 
   if (!timeline.hasStartTime) {
