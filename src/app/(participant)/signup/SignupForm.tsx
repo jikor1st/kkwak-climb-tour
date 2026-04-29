@@ -53,7 +53,22 @@ const RECOMMEND_HINT: Record<GradeKey, string> = {
   blue: '평소 파랑을 푸시면 초급(초록 풀이) 추천.',
 }
 
-export function SignupForm({ signupNotice }: { signupNotice: string }) {
+const WEEKDAY_KO = ['일', '월', '화', '수', '목', '금', '토']
+
+function formatContestDateShort(value: string | null): string {
+  if (!value) return '대회 일정 미정'
+  const d = new Date(`${value}T00:00:00`)
+  if (Number.isNaN(d.getTime())) return value
+  return `${d.getMonth() + 1}월 ${d.getDate()}일(${WEEKDAY_KO[d.getDay()]}) · 강남 6개 지점 투어`
+}
+
+export function SignupForm({
+  signupNotice,
+  contestDate,
+}: {
+  signupNotice: string
+  contestDate: string | null
+}) {
   const router = useRouter()
   const { data: session, status, update } = useSession()
 
@@ -132,7 +147,7 @@ export function SignupForm({ signupNotice }: { signupNotice: string }) {
             참가 신청
           </h1>
           <p className="text-ink-700 mt-3 text-sm sm:text-base">
-            5월 10일 · 강남 6개 지점 투어
+            {formatContestDateShort(contestDate)}
           </p>
         </div>
       </div>

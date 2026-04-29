@@ -132,8 +132,12 @@ export default async function LandingPage({
     : { href: '/signup', label: '지금 참가 신청하기 →' }
 
   const bottomCopy = hasParticipant
-    ? '신청 완료. 5월 10일에 만나요.'
-    : '5월 10일, 꽉크루 강남 투어에서 만나요.'
+    ? contestDate
+      ? `신청 완료. ${dateBig}에 만나요.`
+      : '신청 완료. 대회 날 만나요.'
+    : contestDate
+    ? `${dateBig}, 꽉크루 강남 투어에서 만나요.`
+    : '꽉크루 강남 투어에서 만나요.'
 
   return (
     <div className="min-h-screen">
