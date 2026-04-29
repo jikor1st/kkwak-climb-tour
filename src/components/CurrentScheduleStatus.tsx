@@ -186,10 +186,12 @@ export function CurrentScheduleStatus({ timeline, contestDate }: Props) {
       </div>
 
       {next && (
-        <div className="text-[11px] opacity-90 flex items-center gap-1.5">
+        <div className="text-[11px] opacity-90 flex items-center gap-1.5 flex-wrap">
           <span>다음:</span>
           <strong className="font-black">{next.name}</strong>
-          <span className="num">{next.start}</span>
+          <span className="num opacity-80">
+            {next.start} ~ {next.end}
+          </span>
         </div>
       )}
     </Wrap>
