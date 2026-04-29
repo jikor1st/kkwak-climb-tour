@@ -10,6 +10,7 @@ import {
 import { buildTimeline } from "@/lib/contest/schedule"
 import { CurrentScheduleStatus } from "@/components/CurrentScheduleStatus"
 import { TimelineList } from "@/components/TimelineList"
+import { GymProgressList } from "@/components/GymProgressList"
 
 export const dynamic = "force-dynamic"
 
@@ -159,65 +160,17 @@ export default async function DashboardPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {contest.gyms.map((gym, i) => {
-              const ratio =
-                gym.total_count > 0
-                  ? Math.round((gym.solved_count / gym.total_count) * 100)
-                  : 0
-              const empty = gym.total_count === 0
-              return (
-                <Link
-                  key={gym.id}
-                  href={`/record?gym=${gym.id}`}
-                  className="flex items-center gap-3 p-3.5 rounded-xl border border-line hover:border-line-strong transition group"
-                >
-                  <div className="w-9 h-9 rounded-lg bg-mute flex items-center justify-center text-xs font-black text-ink-700 shrink-0">
-                    {i + 1}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-black">{gym.name}</span>
-                      {ratio === 100 && gym.total_count > 0 && (
-                        <span className="text-[10px] font-black text-grade-green tracking-wider">
-                          ✓ 완료
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-1.5 h-1 bg-mute rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{
-                          width: `${ratio}%`,
-                          background: empty ? "transparent" : meta.color,
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div className="text-right shrink-0 num">
-                    {empty ? (
-                      <span className="text-xs text-ink-300 font-bold">
-                        벽 미등록
-                      </span>
-                    ) : (
-                      <>
-                        <div className="text-sm font-black">
-                          {gym.solved_count}
-                          <span className="text-ink-500">/{gym.total_count}</span>
-                        </div>
-                        <div className="text-[10px] text-ink-500 font-bold">
-                          {ratio}%
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  <span className="text-ink-300 text-sm group-hover:text-ink-700 transition">
-                    →
-                  </span>
-                </Link>
-              )
-            })}
-          </div>
+          <GymProgressList
+            gyms={contest.gyms.map((g) => ({
+              id: g.id,
+              name: g.name,
+              total_count: g.total_count,
+              solved_count: g.solved_count,
+            }))}
+            timeline={timeline}
+            contestDate={contest.settings.contest_date}
+            accentColor={meta.color}
+          />
         )}
       </div>
 
