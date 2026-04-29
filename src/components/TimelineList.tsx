@@ -79,11 +79,16 @@ export function TimelineList({
         const key = stop.type === "gym" ? stop.gymId : stop.breakId
         return (
           <li key={key} className={cls}>
-            <span
-              className={`text-[10px] font-black uppercase tracking-wider w-12 shrink-0 num ${timeColor}`}
+            <div
+              className={`w-14 shrink-0 flex flex-col leading-tight ${timeColor}`}
             >
-              {stop.start}
-            </span>
+              <span className="text-[10px] font-black uppercase tracking-wider num">
+                {stop.start}
+              </span>
+              <span className="text-[10px] font-bold uppercase tracking-wider num opacity-60">
+                ~{stop.end}
+              </span>
+            </div>
             <div className={`flex-1 font-black text-sm ${labelColor}`}>
               {stop.name}
               {isActive && (
@@ -100,7 +105,7 @@ export function TimelineList({
       })}
       {(timeline.endLabel ?? timeline.computedEndLabel) && (
         <li className="flex items-center gap-3 p-3 rounded-xl bg-ink-900 text-white">
-          <span className="text-[10px] font-black uppercase tracking-wider w-12 shrink-0 num">
+          <span className="text-[10px] font-black uppercase tracking-wider w-14 shrink-0 num">
             {timeline.endLabel ?? timeline.computedEndLabel}
           </span>
           <div className="flex-1 font-black text-sm">종료</div>
