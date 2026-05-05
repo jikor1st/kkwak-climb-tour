@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { requireParticipant } from "@/lib/auth/guards"
-import { loadContestData } from "@/lib/contest/load"
+import { loadContestData, buildPaymentInfo } from "@/lib/contest/load"
 import { isContestOpen } from "@/lib/contest/timeline-now"
 import { RecordForm } from "./RecordForm"
 
@@ -61,6 +61,7 @@ export default async function RecordPage({
         rate: contest.completionRate,
       }}
       lockReason={lockReason}
+      paymentInfo={buildPaymentInfo(contest.settings)}
       emptyState={
         noGyms ? (
           <EmptyState

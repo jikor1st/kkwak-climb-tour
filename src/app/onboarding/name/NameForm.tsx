@@ -46,7 +46,7 @@ export function NameForm({
       <div className="max-w-md w-full bg-surface border border-line rounded-3xl p-6 sm:p-8 shadow-card">
         <div className="mb-5">
           <div className="text-xs text-accent uppercase tracking-[0.2em] font-black mb-1.5">
-            {hasExistingParticipant ? "회원 정보 보완" : "STEP · 1/2"}
+            {hasExistingParticipant ? "회원 정보 보완" : "회원 가입"}
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
             이름을 알려주세요
@@ -60,7 +60,7 @@ export function NameForm({
             ) : (
               <>
                 대회 운영진이 누가 누군지 식별할 수 있도록 실명을 입력해주세요.
-                참가 신청 시 표시 이름은 따로 정할 수 있어요.
+                저장하면 바로 참가 신청 화면으로 넘어가요.
               </>
             )}
           </p>

@@ -215,6 +215,10 @@
       display: none;
     }
   }
+  /* 세션 안에서 이미 한 번 봤으면 즉시 숨김 — 페이지 이동마다 2.2s 보지 않게. */
+  html.splash-seen .splash-screen {
+    display: none;
+  }
 
   .num {
     font-feature-settings: "tnum";

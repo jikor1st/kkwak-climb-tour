@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { signOut, useSession } from "next-auth/react"
@@ -81,14 +80,8 @@ export function MeForm({
 
   return (
     <div className="min-h-screen bg-paper pb-20">
-      <div className="max-w-xl mx-auto px-5 pt-8">
+      <div className="max-w-xl mx-auto px-5 pt-6">
         <div className="mb-6">
-          <Link
-            href={participant ? "/dashboard" : "/"}
-            className="text-xs text-ink-500 hover:text-ink-900 transition font-bold inline-block mb-2"
-          >
-            ← 돌아가기
-          </Link>
           <div className="text-xs text-accent uppercase tracking-[0.2em] font-black mb-1">
             MY ACCOUNT
           </div>

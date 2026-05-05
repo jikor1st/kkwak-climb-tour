@@ -1,4 +1,3 @@
-import Link from "next/link"
 import { requireAuth } from "@/lib/auth/guards"
 import {
   loadRankings,
@@ -13,17 +12,36 @@ export default async function RankingPage() {
   const myParticipantId = session.user.participant?.id ?? null
   const data = await loadRankings()
 
+  const allGroups: RankingGroupView[] = data.ungrouped
+    ? [...data.groups, data.ungrouped]
+    : [...data.groups]
+
+  // 내 행 찾기 — 점프 CTA용
+  let myRow: RankingRow | null = null
+  let myGroup: RankingGroupView | null = null
+  if (myParticipantId) {
+    for (const g of allGroups) {
+      const row = g.rows.find((r) => r.participantId === myParticipantId)
+      if (row) {
+        myRow = row
+        myGroup = g
+        break
+      }
+    }
+  }
+
   return (
     <div className="max-w-3xl mx-auto px-5 pt-6 pb-20">
-      <div className="mb-6">
+      <div className="mb-5">
         <div className="text-xs text-accent uppercase tracking-[0.2em] font-black mb-1.5">
-          LEADERBOARD · 전체 순위
+          LEADERBOARD
         </div>
         <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
           전체 순위
         </h1>
         <p className="text-xs text-ink-500 mt-1.5 leading-relaxed">
-          완등 비율(%)이 같으면 풀이 갯수가 많은 사람이 위. 같으면 공동 순위.
+          완등 비율(%)이 높은 순. 같은 비율이면 풀이 갯수가 많은 사람이 위.
+          그래도 같으면 공동 순위.
         </p>
       </div>
 
@@ -37,6 +55,36 @@ export default async function RankingPage() {
         </div>
       ) : (
         <>
+          {/* 내 위치로 점프 */}
+          {myRow && myGroup && (
+            <a
+              href={`#group-${myGroup.id}`}
+              className="block mb-4 bg-accent-soft border-2 border-accent/30 rounded-2xl p-4 hover:bg-accent/10 transition group"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="text-[10px] font-black text-accent uppercase tracking-wider mb-0.5">
+                    내 순위
+                  </div>
+                  <div className="flex items-baseline gap-2 flex-wrap">
+                    <span className="text-2xl font-black num text-accent">
+                      {myRow.rank}위
+                    </span>
+                    <span className="text-xs text-ink-700 font-bold">
+                      / {myGroup.rows.length}명 중 · {myGroup.name}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-ink-500 num mt-0.5 font-bold">
+                    {myRow.rate}% · {myRow.solved}/{myRow.total} 완등
+                  </div>
+                </div>
+                <span className="shrink-0 text-xs font-black text-accent group-hover:translate-x-0.5 transition">
+                  내 위치로 ↓
+                </span>
+              </div>
+            </a>
+          )}
+
           {data.groups.map((group) => (
             <RankingSection
               key={group.id}
@@ -59,15 +107,6 @@ export default async function RankingPage() {
           )}
         </>
       )}
-
-      <div className="mt-6 text-center">
-        <Link
-          href="/dashboard"
-          className="inline-block text-xs text-ink-500 hover:text-ink-900 transition font-bold"
-        >
-          ← 내 대시보드로
-        </Link>
-      </div>
     </div>
   )
 }
@@ -82,17 +121,28 @@ function RankingSection({
   const divisionLabels = group.divisions.map((d) => d.label).join(" · ")
   const accent = group.divisions[0]?.color ?? "#0a0a0a"
   const showDivisionTag = group.divisions.length > 1
+  const isUngrouped = group.id === "__ungrouped__"
   return (
-    <section className="bg-surface border border-line rounded-3xl p-5 sm:p-6 shadow-soft mb-4">
+    <section
+      id={`group-${group.id}`}
+      className="bg-surface border border-line rounded-3xl p-5 sm:p-6 shadow-soft mb-4 scroll-mt-16"
+    >
       <div className="flex items-center justify-between mb-1">
         <h2 className="text-base font-black">{group.name}</h2>
         <span className="text-[10px] font-black text-ink-500 uppercase tracking-wider">
           {group.rows.length}명
         </span>
       </div>
-      <p className="text-xs text-ink-500 mb-4">
-        {divisionLabels || "참여 부 없음"} · 풀이율 합산 랭킹
-      </p>
+      <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
+        <p className="text-xs text-ink-500">
+          {divisionLabels || "참여 부 없음"} · 풀이율 합산
+        </p>
+        {!isUngrouped && (
+          <span className="text-[10px] font-black text-accent bg-accent-soft border border-accent/20 px-2 py-0.5 rounded-full tracking-wider">
+            🏆 1등 1명 시상
+          </span>
+        )}
+      </div>
 
       {group.rows.length === 0 ? (
         <div className="bg-mute rounded-xl p-5 text-sm text-ink-700 text-center">

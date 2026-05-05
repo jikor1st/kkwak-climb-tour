@@ -175,24 +175,24 @@ export default async function LandingPage({
           접근 권한이 없는 페이지입니다.
         </div>
       )}
-      {isAdmin && (
-        <Link
-          href="/admin"
-          className="fixed top-4 right-4 z-50 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-ink-900 text-white text-xs font-black shadow-pop hover:bg-accent transition"
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-          운영자 콘솔 →
-        </Link>
-      )}
       {isLoggedIn && (
-        <Link
-          href="/me"
-          className={`fixed ${
-            isAdmin ? 'top-16' : 'top-4'
-          } right-4 z-40 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface border border-line text-xs font-black text-ink-700 hover:border-ink-900 transition`}
-        >
-          내 계정
-        </Link>
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-ink-900 text-white text-xs font-black shadow-pop hover:bg-accent transition"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+              운영자 콘솔
+            </Link>
+          )}
+          <Link
+            href="/me"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-surface/90 backdrop-blur-md border border-line text-xs font-black text-ink-700 hover:border-ink-900 transition shadow-soft"
+          >
+            내 계정
+          </Link>
+        </div>
       )}
 
       {/* Hero */}

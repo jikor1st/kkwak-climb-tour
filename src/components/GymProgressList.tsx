@@ -135,11 +135,7 @@ export function GymProgressList({
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-black">{gym.name}</span>
                 {isTarget && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-black text-white bg-accent px-1.5 py-0.5 rounded-full tracking-wider">
-                    <span className="relative inline-flex w-1.5 h-1.5">
-                      <span className="absolute inset-0 rounded-full bg-white live-dot-ring" />
-                      <span className="relative inline-flex w-1.5 h-1.5 rounded-full bg-white live-dot" />
-                    </span>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-black text-accent bg-accent-soft border border-accent/30 px-1.5 py-0.5 rounded-full tracking-wider">
                     {target!.label}
                   </span>
                 )}

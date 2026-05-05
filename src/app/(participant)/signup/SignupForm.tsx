@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { PaymentInfoCard } from '@/components/PaymentInfoCard'
+import type { PaymentInfo } from '@/lib/contest/load'
 import type {
   Grade,
   Division,
@@ -26,13 +28,13 @@ function softBg(hex: string): string {
 }
 
 export function SignupForm({
-  signupNotice,
+  paymentInfo,
   contestDate,
   grades,
   divisions,
   recommendations,
 }: {
-  signupNotice: string
+  paymentInfo: PaymentInfo
   contestDate: string | null
   grades: Grade[]
   divisions: Division[]
@@ -212,7 +214,7 @@ export function SignupForm({
           </div>
         </Section>
 
-        {/* 3. 부 (참가 카테고리) */}
+        {/* 2. 부 (참가 카테고리) */}
         <Section
           index={2}
           title="참가 부"
@@ -289,7 +291,49 @@ export function SignupForm({
           </div>
         </Section>
 
-        {/* 4. 참가 유형 */}
+        {/* 라이브 미리보기 — 부까지 골랐을 때 즉시 표시. 사용자가 자기 결정을 시각적으로 확인할 수 있도록 부 선택 바로 뒤에 위치. */}
+        {selectedGrade && selectedDivision && selectedDivisionGrade && (
+          <div className="relative overflow-hidden rounded-2xl bg-ink-900 p-5 sm:p-6">
+            <div
+              className="absolute inset-0 opacity-30"
+              style={{
+                background: `radial-gradient(ellipse 80% 60% at 0% 0%, ${selectedGrade.color_hex}80, transparent 60%), radial-gradient(ellipse 70% 50% at 100% 100%, ${selectedDivisionGrade.color_hex}80, transparent 60%)`,
+              }}
+            />
+            <div className="relative">
+              <div className="text-[10px] text-white/60 uppercase tracking-[0.2em] font-black mb-3">
+                YOUR ENTRY
+              </div>
+              <div className="font-black text-lg sm:text-xl leading-snug text-white">
+                <span className="text-white">{sessionName || '____'}</span>
+                <span className="text-white/70">님은 </span>
+                <span style={{ color: selectedDivisionGrade.color_hex }}>
+                  {selectedDivision.label}
+                </span>
+                <span className="text-white/70">에서 </span>
+                <span style={{ color: selectedDivisionGrade.color_hex }}>
+                  {selectedDivisionGrade.label} 풀이
+                </span>
+                <span className="text-white/70">로 신청합니다</span>
+              </div>
+              <div className="mt-3 flex items-center gap-2 text-xs flex-wrap">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-white/90 font-bold">
+                  <span
+                    className="w-2 h-2 rounded-full"
+                    style={{ background: selectedGrade.color_hex }}
+                  />
+                  평소 {selectedGrade.label}
+                </span>
+                <span className="text-white/40">→</span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-white/90 font-bold">
+                  {participantType === 'crew' ? '꽉크루' : '게스트'}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 3. 참가 유형 */}
         <Section index={3} title="참가 유형">
           <div className="grid grid-cols-2 gap-2.5">
             {(
@@ -320,8 +364,8 @@ export function SignupForm({
           </div>
         </Section>
 
-        {/* 5. 약관 */}
-        <Section index={4} title="약관 동의">
+        {/* 4. 약관 */}
+        <Section index={4} title="참가 약관 · 개인정보 동의">
           <button
             type="button"
             onClick={() => setAgreedToTerms(!agreedToTerms)}
@@ -339,57 +383,30 @@ export function SignupForm({
               {agreedToTerms && <span className="text-xs font-black">✓</span>}
             </span>
             <div className="text-sm flex-1">
-              <p className="font-black text-ink-900 mb-1.5">참가 약관에 동의합니다</p>
-              <ul className="space-y-0.5 text-ink-500 text-xs leading-relaxed">
-                <li>· 정해진 색만 풀기 (다른 색 풀면 실격)</li>
-                <li>· 양심적으로 기록하기</li>
-                <li>· 즐겁게 참여하기</li>
+              <p className="font-black text-ink-900 mb-1.5">아래 내용에 모두 동의합니다</p>
+              <ul className="space-y-1 text-ink-700 text-xs leading-relaxed">
+                <li>
+                  · <strong className="text-ink-900">참가 규칙</strong> — 본인 부의
+                  색만 풀기 (다른 색 풀면 실격), 양심적으로 기록하기
+                </li>
+                <li>
+                  · <strong className="text-ink-900">개인정보 수집·이용</strong> —
+                  카카오 계정의 닉네임과 본 대회의 풀이 기록을 대회 운영·랭킹
+                  산정·시상 안내 목적으로만 수집·이용
+                </li>
+                <li>
+                  · <strong className="text-ink-900">보관·파기</strong> — 대회 종료
+                  후 6개월 이내 파기, 회원 탈퇴 시 즉시 영구 삭제
+                </li>
+                <li>
+                  · <strong className="text-ink-900">참가비 환불</strong> — 입금
+                  확인 전 취소는 즉시 환불, 입금 확인 후 대회 3일 전까지 취소
+                  가능
+                </li>
               </ul>
             </div>
           </button>
         </Section>
-
-        {/* 라이브 미리보기 */}
-        {selectedGrade && selectedDivision && selectedDivisionGrade && (
-          <div className="relative overflow-hidden rounded-2xl bg-ink-900 p-5 sm:p-6">
-            <div
-              className="absolute inset-0 opacity-30"
-              style={{
-                background: `radial-gradient(ellipse 80% 60% at 0% 0%, ${selectedGrade.color_hex}80, transparent 60%), radial-gradient(ellipse 70% 50% at 100% 100%, ${selectedDivisionGrade.color_hex}80, transparent 60%)`,
-              }}
-            />
-            <div className="relative">
-              <div className="text-[10px] text-white/60 uppercase tracking-[0.2em] font-black mb-3">
-                YOUR ENTRY
-              </div>
-              <div className="font-black text-lg sm:text-xl leading-snug text-white">
-                <span className="text-white">{sessionName || '____'}</span>
-                <span className="text-white/70">님은 </span>
-                <span style={{ color: selectedDivisionGrade.color_hex }}>
-                  {selectedDivision.label}
-                </span>
-                <span className="text-white/70">에서 </span>
-                <span style={{ color: selectedDivisionGrade.color_hex }}>
-                  {selectedDivisionGrade.label} 풀이
-                </span>
-                <span className="text-white/70">로 신청합니다</span>
-              </div>
-              <div className="mt-3 flex items-center gap-2 text-xs">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-white/90 font-bold">
-                  <span
-                    className="w-2 h-2 rounded-full"
-                    style={{ background: selectedGrade.color_hex }}
-                  />
-                  평소 {selectedGrade.label}
-                </span>
-                <span className="text-white/40">→</span>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-white/90 font-bold">
-                  {participantType === 'crew' ? '꽉크루' : '게스트'}
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
 
         {error && (
           <div className="bg-accent-soft text-accent border-2 border-accent/30 px-4 py-3 rounded-xl text-sm font-bold">
@@ -434,15 +451,13 @@ export function SignupForm({
         confirmLabel="참가 신청"
         cancelLabel="다시 보기"
         message={
-          signupNotice.trim() ? (
-            <span className="block whitespace-pre-wrap text-sm text-ink-700 leading-relaxed">
-              {signupNotice}
-            </span>
-          ) : (
-            <span className="block text-sm text-ink-700">
-              위 내용으로 참가 신청을 완료합니다.
-            </span>
-          )
+          <div className="space-y-3">
+            <p className="text-sm text-ink-700 leading-relaxed">
+              신청 후 입금이 확인되면 기록 화면이 자동으로 열려요. 아래 입금
+              정보를 확인하세요.
+            </p>
+            <PaymentInfoCard info={paymentInfo} />
+          </div>
         }
         onConfirm={submitSignup}
         onCancel={() => setConfirming(false)}

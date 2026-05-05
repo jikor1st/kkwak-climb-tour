@@ -1,12 +1,14 @@
 import Link from "next/link"
 import { requireParticipant } from "@/lib/auth/guards"
-import { loadContestData } from "@/lib/contest/load"
+import { loadContestData, buildPaymentInfo } from "@/lib/contest/load"
 import { loadDifficultySystem } from "@/lib/contest/grades"
 import { buildTimeline } from "@/lib/contest/schedule"
+import { todayDateStringKST } from "@/lib/contest/timeline-now"
 import { CurrentScheduleStatus } from "@/components/CurrentScheduleStatus"
 import { TimelineList } from "@/components/TimelineList"
 import { GymProgressList } from "@/components/GymProgressList"
 import { CountUpNumber } from "@/components/CountUpNumber"
+import { PaymentInfoCard } from "@/components/PaymentInfoCard"
 
 export const dynamic = "force-dynamic"
 
@@ -41,6 +43,32 @@ export default async function DashboardPage() {
   ]
     .filter(Boolean)
     .join(" · ") || "일정 미정"
+
+  // 상태별 메인 CTA — 잘못된 affordance(잠긴 상태에서 "기록하기")를 줄이고
+  // 사용자가 지금 할 수 있는 행동을 안내한다.
+  // 미입금 상태면 입금 안내 카드를 같은 페이지 하단에 직접 렌더하므로
+  // CTA는 외부 라우팅 대신 anchor 스크롤로 처리한다.
+  const today = todayDateStringKST()
+  const contestOver =
+    !!contest.settings.contest_date && contest.settings.contest_date < today
+  const paymentInfo = buildPaymentInfo(contest.settings)
+  const primaryCta = !participant.paid
+    ? {
+        href: "#payment-info",
+        label: "입금 안내 보기 ↓",
+        sub: "운영진이 입금을 확인하면 자동으로 기록 화면이 열려요",
+      }
+    : contestOver
+      ? {
+          href: "/ranking",
+          label: "최종 결과 보기 →",
+          sub: null as string | null,
+        }
+      : {
+          href: "/record",
+          label: "풀이 기록하기 →",
+          sub: null as string | null,
+        }
 
   return (
     <div className="max-w-3xl mx-auto px-5 pt-6 pb-8 space-y-4">
@@ -119,21 +147,59 @@ export default async function DashboardPage() {
           </div>
 
           <Link
-            href="/record"
+            href={primaryCta.href}
             className="mt-5 inline-flex w-full items-center justify-center gap-2 py-4 bg-accent hover:bg-accent/90 hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(220,38,38,0.28)] active:translate-y-0 transition-all rounded-xl font-black text-white text-base shadow-pop"
           >
-            풀이 기록하기 →
+            {primaryCta.label}
           </Link>
-          <div className="mt-3 text-center">
-            <Link
-              href="/ranking"
-              className="text-xs font-bold text-ink-500 hover:text-ink-900 transition inline-flex items-center gap-1"
-            >
-              전체 순위 보기 →
-            </Link>
-          </div>
+          {primaryCta.sub && (
+            <p className="mt-3 text-center text-xs text-ink-500 font-bold leading-relaxed">
+              {primaryCta.sub}
+            </p>
+          )}
+          {primaryCta.href !== "/ranking" && (
+            <div className="mt-3 text-center">
+              <Link
+                href="/ranking"
+                className="text-xs font-bold text-ink-500 hover:text-ink-900 transition inline-flex items-center gap-1"
+              >
+                전체 순위 보기 →
+              </Link>
+            </div>
+          )}
         </div>
       </section>
+
+      {/* 입금 안내 — 미입금 참가자에게만 표시. 별도 페이지로 빼지 않고
+          대시보드에서 바로 보이도록 인라인 렌더한다. */}
+      {!participant.paid && (
+        <section
+          id="payment-info"
+          className="scroll-mt-16 bg-surface border-2 border-accent/30 rounded-3xl p-5 sm:p-6 shadow-card"
+        >
+          <div className="flex items-center gap-2.5 mb-4">
+            <div
+              className="shrink-0 w-9 h-9 rounded-xl bg-accent text-white flex items-center justify-center text-base font-black shadow-pop"
+              aria-hidden
+            >
+              ₩
+            </div>
+            <div>
+              <div className="text-[10px] font-black text-accent uppercase tracking-[0.2em]">
+                ENTRY PENDING
+              </div>
+              <h2 className="text-base font-black tracking-tight">
+                입금 안내
+              </h2>
+            </div>
+          </div>
+          <PaymentInfoCard info={paymentInfo} />
+          <p className="mt-3 text-[11px] text-ink-500 leading-relaxed">
+            입금 후 운영진이 확인할 때까지 약간의 시간이 걸릴 수 있어요. 화면을
+            새로 고치면 최신 상태로 갱신돼요.
+          </p>
+        </section>
+      )}
 
       {/* 3) 행동 — 지점별 진행 */}
       <section className="bg-surface border border-line rounded-3xl p-5 sm:p-6 shadow-soft">

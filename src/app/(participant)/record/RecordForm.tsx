@@ -2,9 +2,10 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useRef, useState } from "react"
-import type { GymData } from "@/lib/contest/load"
+import type { GymData, PaymentInfo } from "@/lib/contest/load"
 import type { DivisionView } from "@/lib/contest/grades"
 import { NumberInputDialog } from "@/components/NumberInputDialog"
+import { PaymentInfoCard } from "@/components/PaymentInfoCard"
 
 type SaveState = "idle" | "saving" | "saved" | "error"
 
@@ -26,6 +27,7 @@ type Props = {
   initialGymId: string | null
   initialTotals: { solved: number; total: number; rate: number }
   lockReason: LockReason | null
+  paymentInfo: PaymentInfo
   emptyState: React.ReactNode
 }
 
@@ -37,6 +39,7 @@ export function RecordForm({
   initialGymId,
   initialTotals,
   lockReason,
+  paymentInfo,
   emptyState,
 }: Props) {
   const locked = lockReason !== null
@@ -142,10 +145,41 @@ export function RecordForm({
     return <>{emptyState}</>
   }
 
+  // 미입금 — 기록 화면 자체를 잠그고 안내 화면으로 대체.
+  // 기록 권한이 없으니 잘못된 affordance(+/-, 탭)를 노출하지 않는다.
+  if (lockReason?.kind === "unpaid") {
+    return (
+      <UnpaidLockScreen
+        participantName={participant.display_name}
+        paymentInfo={paymentInfo}
+      />
+    )
+  }
+
   const activeGym = gyms.find((g) => g.id === activeGymId) ?? gyms[0]
 
   return (
     <div className="pb-32">
+      {/* Lock banner (대회 시간 외) — 화면 최상단에 가장 먼저 */}
+      {lockReason && lockReason.kind === "closed" && (
+        <div className="max-w-3xl mx-auto px-5 pt-4">
+          <div className="rounded-2xl px-4 py-4 bg-ink-900 text-white flex items-start gap-3">
+            <div
+              className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-base font-black bg-white/15"
+              aria-hidden
+            >
+              🔒
+            </div>
+            <div className="flex-1 pt-0.5">
+              <div className="font-black text-sm">{lockReason.title}</div>
+              <div className="text-xs mt-0.5 leading-relaxed text-white/80">
+                {lockReason.desc} 지난 기록은 그대로 확인할 수 있어요.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Sticky header */}
       <div className="sticky top-12 z-30 bg-paper/75 backdrop-blur-xl backdrop-saturate-150 border-b border-line">
         <div className="max-w-3xl mx-auto px-5 py-4">
@@ -249,48 +283,6 @@ export function RecordForm({
           })}
         </div>
       </div>
-
-      {/* Lock banner */}
-      {lockReason && (
-        <div className="max-w-3xl mx-auto px-5 pt-3">
-          <div
-            className={`rounded-xl px-4 py-4 border-2 flex items-start gap-3 ${
-              lockReason.kind === "unpaid"
-                ? "bg-accent-soft border-accent/30"
-                : "bg-ink-900 border-ink-900 text-white"
-            }`}
-          >
-            <div
-              className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-base font-black ${
-                lockReason.kind === "unpaid"
-                  ? "bg-accent text-white"
-                  : "bg-white/20 text-white"
-              }`}
-              aria-hidden
-            >
-              {lockReason.kind === "unpaid" ? "₩" : "🔒"}
-            </div>
-            <div className="flex-1 pt-0.5">
-              <div
-                className={`font-black text-sm ${
-                  lockReason.kind === "unpaid" ? "text-accent" : "text-white"
-                }`}
-              >
-                {lockReason.title}
-              </div>
-              <div
-                className={`text-xs mt-0.5 leading-relaxed ${
-                  lockReason.kind === "unpaid"
-                    ? "text-ink-700"
-                    : "text-white/80"
-                }`}
-              >
-                {lockReason.desc}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Hint */}
       <div className="max-w-3xl mx-auto px-5 pt-3">
@@ -417,6 +409,7 @@ function WallCard({
           onClick={() => onAdjust(wallId, -1)}
           disabled={minusDisabled}
           className="w-14 h-14 rounded-2xl bg-mute hover:bg-line disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center text-2xl font-black active:scale-95"
+          aria-label={`${name} 1개 빼기`}
         >
           −
         </button>
@@ -424,14 +417,25 @@ function WallCard({
           type="button"
           onClick={handleEdit}
           disabled={disabled || total === 0}
-          className="flex-1 text-center py-2 rounded-xl hover:bg-mute disabled:hover:bg-transparent transition disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex-1 text-center py-2 rounded-xl hover:bg-mute disabled:hover:bg-transparent transition disabled:cursor-not-allowed disabled:opacity-60 group"
+          aria-label={`${name} 직접 입력`}
         >
-          <div
-            className={`text-4xl font-black num leading-none ${
-              count === 0 ? "text-ink-300" : ""
-            }`}
-          >
-            {count}
+          <div className="flex items-baseline justify-center gap-1.5">
+            <div
+              className={`text-4xl font-black num leading-none ${
+                count === 0 ? "text-ink-300" : ""
+              }`}
+            >
+              {count}
+            </div>
+            {!disabled && total > 0 && (
+              <span
+                className="text-ink-300 group-hover:text-ink-500 transition text-sm leading-none"
+                aria-hidden
+              >
+                ✎
+              </span>
+            )}
           </div>
           <div className="text-xs text-ink-500 num mt-1">/ {total}</div>
         </button>
@@ -440,6 +444,7 @@ function WallCard({
           onClick={() => onAdjust(wallId, 1)}
           disabled={plusDisabled}
           className="w-14 h-14 rounded-2xl bg-accent hover:bg-accent/90 disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center text-2xl font-black text-white shadow-pop active:scale-95"
+          aria-label={`${name} 1개 더하기`}
         >
           +
         </button>
@@ -486,4 +491,49 @@ function formatTime(d: Date | null) {
   const min = Math.floor(diff / 60)
   if (min < 60) return ` · ${min}분 전`
   return ""
+}
+
+function UnpaidLockScreen({
+  participantName,
+  paymentInfo,
+}: {
+  participantName: string
+  paymentInfo: PaymentInfo
+}) {
+  return (
+    <div className="max-w-3xl mx-auto px-5 pt-8 pb-32">
+      <div className="bg-surface border-2 border-accent/30 rounded-3xl p-6 sm:p-8 shadow-card">
+        <div className="flex items-center gap-3 mb-5">
+          <div
+            className="shrink-0 w-12 h-12 rounded-2xl bg-accent text-white flex items-center justify-center text-xl font-black shadow-pop"
+            aria-hidden
+          >
+            ₩
+          </div>
+          <div>
+            <div className="text-[10px] font-black text-accent uppercase tracking-[0.2em] mb-0.5">
+              ENTRY PENDING
+            </div>
+            <div className="text-lg sm:text-xl font-black tracking-tight">
+              입금 확인 후 기록할 수 있어요
+            </div>
+          </div>
+        </div>
+        <p className="text-sm text-ink-700 leading-relaxed mb-5">
+          <strong className="text-ink-900">{participantName}</strong>
+          님의 신청은 접수됐어요. 운영진이 입금을 확인하면 자동으로 기록 화면이
+          열려요.
+        </p>
+
+        <PaymentInfoCard info={paymentInfo} />
+
+        <Link
+          href="/dashboard"
+          className="block text-center py-3.5 mt-5 rounded-xl bg-ink-900 text-white hover:bg-ink-700 transition font-black text-sm"
+        >
+          ← 대시보드로
+        </Link>
+      </div>
+    </div>
+  )
 }

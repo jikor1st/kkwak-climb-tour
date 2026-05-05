@@ -61,32 +61,23 @@ export default async function AdminHome() {
         />
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-4">
+      <SectionHeading
+        title="대회 셋업"
+        desc="대회 시작 전에 한 번씩 정해두는 항목입니다. 1 → 2 → 3 → 4 순서로 진행하세요."
+      />
+      <div className="grid sm:grid-cols-2 gap-4 mb-10">
         <AdminCard
           href="/admin/difficulty"
-          eyebrow="STEP 0"
+          eyebrow="STEP 1"
           title="난이도 · 부 · 랭킹 그룹"
           desc="색·참가 부·랭킹 그룹·도전 난이도→추천 부 매핑을 관리합니다."
         />
         <AdminCard
           href="/admin/walls"
-          eyebrow="STEP 1"
+          eyebrow="STEP 2"
           title="벽 · 문제 수 등록"
           desc="6개 암장의 벽과 색별 문제 수를 입력합니다."
           required={wallCount === 0 || totalProblems === 0}
-        />
-        <AdminCard
-          href="/admin/participants"
-          eyebrow="STEP 2"
-          title="참가자 · 입금 확인"
-          desc="신청자 목록을 확인하고 입금 완료를 표시합니다."
-          required={participantCount > paidCount}
-        />
-        <AdminCard
-          href="/admin/users"
-          eyebrow="권한"
-          title="회원 · 권한 관리"
-          desc="가입한 모든 카카오 회원에게 어드민 권한을 부여·해제합니다."
         />
         <AdminCard
           href="/admin/schedule"
@@ -98,10 +89,39 @@ export default async function AdminHome() {
         <AdminCard
           href="/admin/notice"
           eyebrow="STEP 4"
-          title="참가 신청 안내문구"
-          desc="신청 직전 확인 다이얼로그에 보일 입금 계좌·안내 문구를 작성합니다."
+          title="입금 · 결제 안내"
+          desc="참가비·계좌·카카오페이/토스 송금 링크를 입력합니다. 참가자에게 동일하게 노출돼요."
         />
       </div>
+
+      <SectionHeading
+        title="대회 운영"
+        desc="신청을 받기 시작하면 그때그때 처리하는 항목입니다."
+      />
+      <div className="grid sm:grid-cols-2 gap-4">
+        <AdminCard
+          href="/admin/participants"
+          eyebrow="참가자"
+          title="참가자 · 입금 확인"
+          desc="신청자 목록을 확인하고 입금 완료를 표시합니다."
+          required={participantCount > paidCount}
+        />
+        <AdminCard
+          href="/admin/users"
+          eyebrow="회원"
+          title="회원 · 권한 관리"
+          desc="가입한 모든 카카오 회원에게 어드민 권한을 부여·해제합니다."
+        />
+      </div>
+    </div>
+  )
+}
+
+function SectionHeading({ title, desc }: { title: string; desc: string }) {
+  return (
+    <div className="mb-3 flex items-baseline gap-3 flex-wrap">
+      <h2 className="text-base font-black">{title}</h2>
+      <p className="text-xs text-ink-500">{desc}</p>
     </div>
   )
 }

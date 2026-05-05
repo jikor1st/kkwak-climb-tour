@@ -70,11 +70,20 @@ export default function RootLayout({
       lang="ko"
       className="h-full antialiased"
       data-scroll-behavior="smooth"
+      suppressHydrationWarning
     >
       <head>
         <link
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css"
+        />
+        {/* 세션 내 첫 방문에만 스플래시 — 이후 라우팅에는 즉시 숨김. blocking 스크립트라
+            <body> 렌더 전에 html.splash-seen이 적용돼 깜빡임 없음. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(sessionStorage.getItem('splash-seen')){document.documentElement.classList.add('splash-seen')}else{sessionStorage.setItem('splash-seen','1')}}catch(e){}",
+          }}
         />
       </head>
       <body className="min-h-full">

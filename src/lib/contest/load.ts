@@ -27,6 +27,38 @@ export type ContestSettings = {
   lunch_minutes: number
   lunch_start_time: string | null
   contest_date: string | null
+  signup_notice: string
+  entry_fee: number
+  bank_name: string
+  account_number: string
+  account_holder: string
+  kakaopay_link: string
+  toss_link: string
+}
+
+// 결제 정보 묶음 — Dashboard/Record/Signup 전반에서 동일한
+// PaymentInfoCard로 사용. 어떤 페이지든 contest_settings에서 동일한
+// 형태로 뽑아갈 수 있게 한 곳에 정리한다.
+export type PaymentInfo = {
+  entryFee: number
+  bankName: string
+  accountNumber: string
+  accountHolder: string
+  kakaopayLink: string
+  tossLink: string
+  notice: string
+}
+
+export function buildPaymentInfo(s: ContestSettings): PaymentInfo {
+  return {
+    entryFee: s.entry_fee,
+    bankName: s.bank_name.trim(),
+    accountNumber: s.account_number.trim(),
+    accountHolder: s.account_holder.trim(),
+    kakaopayLink: s.kakaopay_link.trim(),
+    tossLink: s.toss_link.trim(),
+    notice: s.signup_notice.trim(),
+  }
 }
 
 export type ContestData = {
@@ -80,7 +112,7 @@ export async function loadContestData(
       supabase
         .from("contest_settings")
         .select(
-          "start_time, end_time, default_gym_minutes, lunch_minutes, lunch_start_time, contest_date",
+          "start_time, end_time, default_gym_minutes, lunch_minutes, lunch_start_time, contest_date, signup_notice, entry_fee, bank_name, account_number, account_holder, kakaopay_link, toss_link",
         )
         .eq("id", 1)
         .maybeSingle(),
@@ -110,6 +142,13 @@ export async function loadContestData(
     lunch_minutes: settingsRow?.lunch_minutes ?? 60,
     lunch_start_time: settingsRow?.lunch_start_time ?? null,
     contest_date: settingsRow?.contest_date ?? null,
+    signup_notice: settingsRow?.signup_notice ?? "",
+    entry_fee: settingsRow?.entry_fee ?? 10000,
+    bank_name: settingsRow?.bank_name ?? "",
+    account_number: settingsRow?.account_number ?? "",
+    account_holder: settingsRow?.account_holder ?? "",
+    kakaopay_link: settingsRow?.kakaopay_link ?? "",
+    toss_link: settingsRow?.toss_link ?? "",
   }
 
   const gymsData: GymData[] = gyms.map((g) => {
