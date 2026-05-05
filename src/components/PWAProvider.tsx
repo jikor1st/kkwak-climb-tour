@@ -102,18 +102,23 @@ export function PWAProvider() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-[max(env(safe-area-inset-bottom,0px),5rem)] left-1/2 -translate-x-1/2 z-[100] max-w-[calc(100%-2rem)]"
+      className="fixed left-3 right-3 z-[100]"
+      style={{
+        // BottomNav 위에 안정적으로 띄우기 — InstallPrompt 와 동일한 간격 규칙.
+        bottom:
+          "calc(max(env(safe-area-inset-bottom, 0px), 0.875rem) + 5.25rem)",
+      }}
     >
-      <div className="flex items-center gap-3 bg-ink-900 text-white rounded-2xl pl-4 pr-2 py-2 shadow-pop backdrop-blur-md">
+      <div className="max-w-md mx-auto flex items-center gap-3 bg-ink-900 text-white rounded-2xl pl-3.5 pr-2 py-2 shadow-pop backdrop-blur-md">
         <span className="relative inline-flex w-2 h-2 shrink-0">
           <span className="absolute inset-0 rounded-full bg-accent live-dot-ring" />
           <span className="relative inline-flex w-2 h-2 rounded-full bg-accent live-dot" />
         </span>
-        <div className="text-xs font-bold leading-tight">
-          새 버전이 있어요
-          <span className="block text-[11px] text-white/60">
+        <div className="flex-1 min-w-0 text-xs font-bold leading-tight">
+          <div className="truncate">새 버전이 있어요</div>
+          <div className="truncate text-[11px] font-bold text-white/60">
             지금 바로 적용해보세요
-          </span>
+          </div>
         </div>
         <button
           type="button"
@@ -121,7 +126,7 @@ export function PWAProvider() {
             if (waitingWorker) waitingWorker.postMessage({ type: "SKIP_WAITING" })
             else window.location.reload()
           }}
-          className="ml-1 px-3 py-2 rounded-xl bg-accent text-white text-xs font-black shadow-pop hover:bg-accent/90 transition shrink-0"
+          className="shrink-0 px-3 py-2 rounded-xl bg-accent text-white text-xs font-black shadow-pop hover:bg-accent/90 transition whitespace-nowrap"
         >
           새로고침
         </button>
