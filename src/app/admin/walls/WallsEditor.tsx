@@ -536,7 +536,7 @@ function WallRow({
   onDelete: () => void
 }) {
   return (
-    <li className="px-5 py-3 hover:bg-mute/30 transition group">
+    <li className="px-4 sm:px-5 py-3 hover:bg-mute/30 transition group">
       <div
         className="flex flex-col sm:grid gap-3 sm:items-center"
         style={{
@@ -550,10 +550,45 @@ function WallRow({
           placeholder="벽 이름"
           className="w-full px-3 py-2.5 bg-mute focus:bg-surface border border-transparent focus:border-ink-900 rounded-lg outline-none text-sm font-bold transition"
         />
-        <div
-          className="grid sm:contents gap-2"
-          style={{ gridTemplateColumns: `repeat(${grades.length}, minmax(0, 1fr))` }}
-        >
+
+        {/* 모바일: 색마다 한 행. 라벨 + Stepper 가 가로로 배치되어 색이 늘어도
+            stepper 폭이 안정적으로 유지된다. */}
+        <div className="flex flex-col gap-1.5 sm:hidden">
+          {grades.map((g) => {
+            const value = counts[`${wall.id}:${g.key}`] ?? 0
+            return (
+              <div
+                key={g.key}
+                className="flex items-center gap-3 py-1"
+              >
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <span
+                    className="w-3 h-3 rounded-full shrink-0"
+                    style={{ background: g.color }}
+                  />
+                  <span className="text-sm font-bold truncate">
+                    {g.label}
+                    {g.divisionLabel && (
+                      <span className="text-[11px] font-bold text-ink-500 ml-1">
+                        · {g.divisionLabel}
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <div className="shrink-0 w-32">
+                  <Stepper
+                    grade={g}
+                    value={value}
+                    onChange={(v) => onCountChange(g.key, v)}
+                  />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* 데스크탑: 부모 그리드 트랙으로 직접 배치 */}
+        <div className="hidden sm:contents">
           {grades.map((g) => (
             <Stepper
               key={g.key}
@@ -563,6 +598,7 @@ function WallRow({
             />
           ))}
         </div>
+
         <button
           type="button"
           onClick={onDelete}
@@ -575,7 +611,7 @@ function WallRow({
         <button
           type="button"
           onClick={onDelete}
-          className="sm:hidden text-xs font-bold text-ink-500 hover:text-accent transition py-1"
+          className="sm:hidden text-xs font-bold text-ink-500 hover:text-accent transition py-2 mt-1 border-t border-line"
         >
           ✕ 이 벽 삭제
         </button>

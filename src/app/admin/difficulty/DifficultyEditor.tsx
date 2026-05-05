@@ -12,7 +12,8 @@ import { ConfirmDialog } from "@/components/ConfirmDialog"
 import { TextInputDialog } from "@/components/TextInputDialog"
 import {
   DndContext,
-  PointerSensor,
+  TouchSensor,
+  MouseSensor,
   KeyboardSensor,
   closestCenter,
   useSensor,
@@ -240,8 +241,16 @@ export function DifficultyEditor({
     () => [...divisions].sort((a, b) => a.sort_order - b.sort_order),
     [divisions],
   )
+  // 모바일에서 드래그가 스크롤로 새는 문제 — 마우스/터치를 분리해 처리한다.
+  // - MouseSensor: 데스크탑 즉시 활성 (5px 이동)
+  // - TouchSensor: 250ms 길게 눌러야 활성 (그 안에 손가락이 5px 이상 움직이면
+  //   드래그 취소되어 스크롤로 흘러감 — UX 자연스러움)
+  // PointerSensor 단독은 두 입력의 임계치를 맞추기 어려워 권장 안 함.
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 250, tolerance: 8 },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
@@ -405,8 +414,8 @@ export function DifficultyEditor({
           />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr_auto_1fr] gap-2 sm:gap-3 items-center mt-2">
-          <div />
-          <div />
+          <div className="hidden sm:block" />
+          <div className="hidden sm:block" />
           <FlowStep
             n="추천"
             title="평소 색 → 부"
@@ -414,8 +423,8 @@ export function DifficultyEditor({
             tone="recommend"
             small
           />
-          <div />
-          <div />
+          <div className="hidden sm:block" />
+          <div className="hidden sm:block" />
         </div>
       </div>
 
@@ -726,12 +735,14 @@ function Section({
 }) {
   return (
     <section className="mb-6">
-      <div className="flex items-end justify-between gap-3 mb-3 px-1">
-        <div>
+      {/* 모바일: 타이틀 위, 액션 버튼 아래로 분리해 좁은 폭에서도 버튼이
+          줄바꿈되지 않도록. 데스크탑에선 기존 가로 정렬 유지. */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 sm:gap-3 mb-3 px-1">
+        <div className="min-w-0">
           <h2 className="text-base font-black">{title}</h2>
           {desc && <p className="text-xs text-ink-500 mt-0.5">{desc}</p>}
         </div>
-        {right}
+        {right && <div className="flex flex-wrap gap-1.5">{right}</div>}
       </div>
       {children}
     </section>
@@ -1549,14 +1560,20 @@ function FlowStep({
     recommend: { bg: "#FAF5FF", fg: "#9333EA", chip: "#9333EA" },
   }
   const c = colorMap[tone]
+  // n이 한글("추천")이면 동그라미 대신 알약형으로 — 글자가 잘리지 않도록.
+  const badgeIsLabel = n.length > 1
   return (
     <div
-      className={`rounded-xl px-3 py-2.5 ${small ? "text-center" : ""}`}
+      className="rounded-xl px-3 py-2.5"
       style={{ background: c.bg }}
     >
       <div className="flex items-center gap-2">
         <span
-          className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-black text-white shrink-0"
+          className={`inline-flex items-center justify-center font-black text-white shrink-0 ${
+            badgeIsLabel
+              ? "h-5 px-2 rounded-full text-[10px]"
+              : "w-5 h-5 rounded-full text-[10px]"
+          }`}
           style={{ background: c.chip }}
         >
           {n}
@@ -1565,7 +1582,11 @@ function FlowStep({
           {title}
         </span>
       </div>
-      <div className="text-[11px] text-ink-700 font-bold mt-0.5 ml-7">
+      <div
+        className={`text-[11px] text-ink-700 font-bold mt-0.5 ${
+          small ? "" : "ml-7"
+        }`}
+      >
         {desc}
       </div>
     </div>

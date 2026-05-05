@@ -383,100 +383,115 @@ export function ParticipantList({
                       const mainGrade = gradeMap[row.main_grade]
                       const mgColor = mainGrade?.color_hex ?? "#6B7280"
                       const mgLabel = mainGrade?.label ?? row.main_grade
+                      const roleDisabled =
+                        pending.has(row.id) ||
+                        row.user_id === currentUserId ||
+                        !row.user_id
+                      const roleTitle =
+                        row.user_id === currentUserId
+                          ? "본인 권한은 변경할 수 없어요"
+                          : row.role === "admin"
+                            ? "어드민 권한 해제"
+                            : "어드민 권한 부여"
                       return (
                         <li
                           key={row.id}
-                          className="flex items-center gap-3 px-4 py-3.5 hover:bg-mute/40 transition"
+                          className="px-4 py-3 sm:py-3.5 hover:bg-mute/40 transition"
                         >
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-black truncate">
-                                {row.display_name}
-                              </span>
-                              <span className="text-[10px] font-bold text-ink-500 px-1.5 py-0.5 rounded bg-mute">
-                                {row.participant_type === "crew" ? "꽉크루" : "게스트"}
-                              </span>
-                              {row.role === "admin" && (
-                                <span className="text-[10px] font-black text-white bg-ink-900 px-1.5 py-0.5 rounded">
-                                  ADMIN
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                            {/* 이름 + 칩들 */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="font-black truncate">
+                                  {row.display_name}
                                 </span>
-                              )}
-                              <span
-                                className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border"
-                                style={{
-                                  color: mgColor,
-                                  borderColor: mgColor,
-                                }}
-                              >
+                                <span className="text-[10px] font-bold text-ink-500 px-1.5 py-0.5 rounded bg-mute whitespace-nowrap">
+                                  {row.participant_type === "crew"
+                                    ? "꽉크루"
+                                    : "게스트"}
+                                </span>
+                                {row.role === "admin" && (
+                                  <span className="text-[10px] font-black text-white bg-ink-900 px-1.5 py-0.5 rounded whitespace-nowrap">
+                                    ADMIN
+                                  </span>
+                                )}
                                 <span
-                                  className="w-1.5 h-1.5 rounded-full"
-                                  style={{ background: mgColor }}
-                                />
-                                평소 {mgLabel}
-                              </span>
+                                  className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap"
+                                  style={{
+                                    color: mgColor,
+                                    borderColor: mgColor,
+                                  }}
+                                >
+                                  <span
+                                    className="w-1.5 h-1.5 rounded-full"
+                                    style={{ background: mgColor }}
+                                  />
+                                  평소 {mgLabel}
+                                </span>
+                              </div>
+                              <div className="text-[11px] text-ink-500 mt-0.5 num">
+                                {new Date(row.created_at).toLocaleDateString(
+                                  "ko-KR",
+                                  {
+                                    month: "2-digit",
+                                    day: "2-digit",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  },
+                                )}
+                              </div>
                             </div>
-                            <div className="text-[11px] text-ink-500 mt-0.5 num">
-                              {new Date(row.created_at).toLocaleDateString("ko-KR", {
-                                month: "2-digit",
-                                day: "2-digit",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
+
+                            {/* 액션 묶음 — 모바일은 아래 줄로 떨어지면서
+                                양쪽 끝(입금 / 메뉴)으로 쫙 펼침 */}
+                            <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-2 pt-1 sm:pt-0 border-t sm:border-t-0 border-line/60">
+                              <PaidToggle
+                                paid={row.paid}
+                                loading={pending.has(row.id)}
+                                onToggle={() => togglePaid(row)}
+                              />
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => setEditTarget(row)}
+                                  disabled={pending.has(row.id)}
+                                  className="shrink-0 w-9 h-9 rounded-lg text-ink-500 hover:text-ink-900 hover:bg-mute flex items-center justify-center transition disabled:opacity-40"
+                                  aria-label="수정"
+                                  title="수정"
+                                >
+                                  ✎
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setRoleTarget(row)}
+                                  disabled={roleDisabled}
+                                  className={`shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition disabled:opacity-30 disabled:cursor-not-allowed ${
+                                    row.role === "admin"
+                                      ? "text-ink-900 bg-mute hover:bg-line"
+                                      : "text-ink-500 hover:text-ink-900 hover:bg-mute"
+                                  }`}
+                                  aria-label={
+                                    row.role === "admin"
+                                      ? "어드민 권한 해제"
+                                      : "어드민 권한 부여"
+                                  }
+                                  title={roleTitle}
+                                >
+                                  {row.role === "admin" ? "★" : "☆"}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setDeleteTarget(row)}
+                                  disabled={pending.has(row.id)}
+                                  className="shrink-0 w-9 h-9 rounded-lg text-ink-300 hover:text-accent hover:bg-accent-soft flex items-center justify-center transition disabled:opacity-40"
+                                  aria-label="삭제"
+                                  title="삭제"
+                                >
+                                  ✕
+                                </button>
+                              </div>
                             </div>
                           </div>
-                          <PaidToggle
-                            paid={row.paid}
-                            loading={pending.has(row.id)}
-                            onToggle={() => togglePaid(row)}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setEditTarget(row)}
-                            disabled={pending.has(row.id)}
-                            className="shrink-0 w-9 h-9 rounded-lg text-ink-500 hover:text-ink-900 hover:bg-mute flex items-center justify-center transition disabled:opacity-40"
-                            aria-label="수정"
-                            title="수정"
-                          >
-                            ✎
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setRoleTarget(row)}
-                            disabled={
-                              pending.has(row.id) ||
-                              row.user_id === currentUserId ||
-                              !row.user_id
-                            }
-                            className={`shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition disabled:opacity-30 disabled:cursor-not-allowed ${
-                              row.role === "admin"
-                                ? "text-ink-900 bg-mute hover:bg-line"
-                                : "text-ink-500 hover:text-ink-900 hover:bg-mute"
-                            }`}
-                            aria-label={
-                              row.role === "admin"
-                                ? "어드민 권한 해제"
-                                : "어드민 권한 부여"
-                            }
-                            title={
-                              row.user_id === currentUserId
-                                ? "본인 권한은 변경할 수 없어요"
-                                : row.role === "admin"
-                                  ? "어드민 권한 해제"
-                                  : "어드민 권한 부여"
-                            }
-                          >
-                            {row.role === "admin" ? "★" : "☆"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeleteTarget(row)}
-                            disabled={pending.has(row.id)}
-                            className="shrink-0 w-9 h-9 rounded-lg text-ink-300 hover:text-accent hover:bg-accent-soft flex items-center justify-center transition disabled:opacity-40"
-                            aria-label="삭제"
-                            title="삭제"
-                          >
-                            ✕
-                          </button>
                         </li>
                       )
                     })}
