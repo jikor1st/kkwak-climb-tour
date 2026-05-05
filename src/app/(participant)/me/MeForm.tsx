@@ -35,6 +35,9 @@ export function MeForm({
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState("")
+  const [confirmLeave, setConfirmLeave] = useState(false)
+  const [leaving, setLeaving] = useState(false)
+  const [leaveError, setLeaveError] = useState("")
 
   const dirty = name.trim() !== user.nickname.trim() && name.trim().length > 0
   const isAdmin = user.role === "admin"
@@ -60,6 +63,25 @@ export function MeForm({
       setNameError(err instanceof Error ? err.message : "저장 실패")
     } finally {
       setSavingName(false)
+    }
+  }
+
+  async function leaveContest() {
+    setLeaving(true)
+    setLeaveError("")
+    try {
+      const res = await fetch("/api/me/participant", { method: "DELETE" })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error ?? "참가 취소 실패")
+      // 세션의 participant 정보를 새로고침 → BottomNav, 가드 등 즉시 반영
+      await update()
+      setConfirmLeave(false)
+      router.refresh()
+    } catch (err) {
+      setLeaveError(err instanceof Error ? err.message : "참가 취소 실패")
+      setConfirmLeave(false)
+    } finally {
+      setLeaving(false)
     }
   }
 
@@ -178,6 +200,45 @@ export function MeForm({
           로그아웃
         </button>
 
+        {/* 참가 취소 — 회원 탈퇴보다 약한 작업. 카카오 계정과 이름은 유지하고
+            참가 신청과 본인이 입력한 풀이 기록만 정리한다. */}
+        {participant && (
+          <div className="bg-surface border border-line rounded-2xl p-5 shadow-soft mb-4">
+            <div className="text-[10px] text-ink-500 uppercase tracking-wider font-black mb-1">
+              참가 취소
+            </div>
+            <h2 className="font-black text-base mb-1">대회 참가만 취소하기</h2>
+            <p className="text-xs text-ink-500 leading-relaxed mb-3">
+              카카오 회원 정보는 그대로 두고{" "}
+              <strong className="text-ink-700">참가 신청과 풀이 기록</strong>만
+              삭제합니다. 마음 바뀌면 메인에서 다시 신청할 수 있어요.
+              {participant.paid && (
+                <>
+                  {" "}
+                  이미 입금하셨다면{" "}
+                  <strong className="text-ink-700">
+                    환불은 운영진에게 따로 문의
+                  </strong>
+                  해주세요.
+                </>
+              )}
+            </p>
+            {leaveError && (
+              <div className="text-xs text-accent font-bold mb-3">
+                ⚠️ {leaveError}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => setConfirmLeave(true)}
+              disabled={leaving}
+              className="w-full px-5 py-3 rounded-xl bg-mute border border-line text-ink-700 font-black text-sm hover:bg-line transition disabled:opacity-50"
+            >
+              {leaving ? "취소 중..." : "참가 취소"}
+            </button>
+          </div>
+        )}
+
         {/* 회원 탈퇴 */}
         <div className="bg-surface border border-accent/20 rounded-2xl p-5 shadow-soft">
           <div className="text-[10px] text-accent uppercase tracking-wider font-black mb-1">
@@ -203,6 +264,29 @@ export function MeForm({
           </button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmLeave}
+        title="참가를 취소할까요?"
+        confirmLabel="참가 취소"
+        cancelLabel="다시 보기"
+        message={
+          <>
+            <strong className="text-ink-900">
+              {participant?.display_name || user.nickname || "내"}
+            </strong>{" "}
+            님의 참가 신청과 지금까지 입력한 풀이 기록이 삭제됩니다.
+            {participant?.paid && (
+              <>
+                {" "}
+                이미 입금된 참가비 환불은 운영진에게 따로 연락 부탁드려요.
+              </>
+            )}
+          </>
+        }
+        onConfirm={leaveContest}
+        onCancel={() => setConfirmLeave(false)}
+      />
 
       <ConfirmDialog
         open={confirmDelete}

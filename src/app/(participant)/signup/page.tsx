@@ -10,9 +10,7 @@ export default async function SignupPage() {
   const [settingsRes, system] = await Promise.all([
     supabase
       .from('contest_settings')
-      .select(
-        'contest_date, entry_fee, bank_name, account_number, account_holder, kakaopay_link, toss_link, signup_notice',
-      )
+      .select('contest_date, entry_fee, kakaopay_link, signup_notice')
       .eq('id', 1)
       .maybeSingle(),
     loadDifficultySystem(),
@@ -21,11 +19,7 @@ export default async function SignupPage() {
   const s = settingsRes.data
   const paymentInfo: PaymentInfo = {
     entryFee: s?.entry_fee ?? 10000,
-    bankName: (s?.bank_name ?? '').trim(),
-    accountNumber: (s?.account_number ?? '').trim(),
-    accountHolder: (s?.account_holder ?? '').trim(),
     kakaopayLink: (s?.kakaopay_link ?? '').trim(),
-    tossLink: (s?.toss_link ?? '').trim(),
     notice: (s?.signup_notice ?? '').trim(),
   }
 

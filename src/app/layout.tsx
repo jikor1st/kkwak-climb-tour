@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthSessionProvider } from "@/lib/auth/session-provider";
 import { SplashScreen } from "@/components/SplashScreen";
+import { PWAProvider } from "@/components/PWAProvider";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ??
@@ -51,13 +53,29 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  // PWA: manifest는 app/manifest.ts가 자동으로 /manifest.webmanifest로 노출.
+  // appleWebApp 설정으로 iOS 홈 화면 추가 시 standalone 모드 + 상태표시줄 색 일치.
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: SITE_NAME,
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#FAFAF7",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FAFAF7" },
+    { media: "(prefers-color-scheme: dark)", color: "#FAFAF7" },
+  ],
   colorScheme: "light",
   width: "device-width",
   initialScale: 1,
+  // PWA에서 zoom in/out 막진 않되 사용자 zoom 의도는 보장
+  maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -89,6 +107,8 @@ export default function RootLayout({
       <body className="min-h-full">
         <SplashScreen />
         <AuthSessionProvider>{children}</AuthSessionProvider>
+        <PWAProvider />
+        <InstallPrompt />
       </body>
     </html>
   );

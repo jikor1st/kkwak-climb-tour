@@ -220,6 +220,27 @@
     display: none;
   }
 
+  /* PWA 설치 안내 등장 애니메이션 — 사용자가 보던 화면을 갑자기 가리지 않도록
+     5.25rem 아래에서 부드럽게 올라오며 페이드인. */
+  @keyframes install-prompt-up {
+    0% {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .install-prompt-enter {
+    animation: install-prompt-up 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .install-prompt-enter {
+      animation: none;
+    }
+  }
+
   .num {
     font-feature-settings: "tnum";
     font-variant-numeric: tabular-nums;

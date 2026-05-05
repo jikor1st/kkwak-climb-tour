@@ -10,9 +10,7 @@ export default async function AdminNoticePage() {
 
   const { data, error } = await supabase
     .from("contest_settings")
-    .select(
-      "entry_fee, bank_name, account_number, account_holder, kakaopay_link, toss_link, signup_notice",
-    )
+    .select("entry_fee, kakaopay_link, signup_notice")
     .eq("id", 1)
     .maybeSingle()
 
@@ -22,11 +20,7 @@ export default async function AdminNoticePage() {
 
   const initial: PaymentSettings = {
     entry_fee: data?.entry_fee ?? 10000,
-    bank_name: data?.bank_name ?? "",
-    account_number: data?.account_number ?? "",
-    account_holder: data?.account_holder ?? "",
     kakaopay_link: data?.kakaopay_link ?? "",
-    toss_link: data?.toss_link ?? "",
     signup_notice: data?.signup_notice ?? "",
   }
 

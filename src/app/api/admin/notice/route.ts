@@ -8,11 +8,7 @@ const MAX_LINK = 300
 
 const FIELDS = [
   "entry_fee",
-  "bank_name",
-  "account_number",
-  "account_holder",
   "kakaopay_link",
-  "toss_link",
   "signup_notice",
 ] as const
 
@@ -63,9 +59,7 @@ export async function PATCH(req: Request) {
     .from("contest_settings")
     .update(updates)
     .eq("id", 1)
-    .select(
-      "entry_fee, bank_name, account_number, account_holder, kakaopay_link, toss_link, signup_notice",
-    )
+    .select("entry_fee, kakaopay_link, signup_notice")
     .single()
 
   if (error) {

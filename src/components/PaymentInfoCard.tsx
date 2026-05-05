@@ -1,6 +1,3 @@
-"use client"
-
-import { useState } from "react"
 import type { PaymentInfo } from "@/lib/contest/load"
 
 type Props = {
@@ -10,11 +7,10 @@ type Props = {
 
 // Dashboard / Record 잠금 / Signup 확인 다이얼로그 어디서든 동일한 정보를 보여주는
 // 결제 안내 카드. 운영진이 어드민에서 입력한 값들을 그대로 가져와 노출하며,
-// 모바일에서 송금 앱이 자동으로 열리도록 외부 링크는 그대로 a[href]로 둔다.
+// 모바일에서 카카오페이 앱이 자동으로 열리도록 외부 링크는 그대로 a[href]로 둔다.
 export function PaymentInfoCard({ info, variant = "panel" }: Props) {
-  const hasAccount = !!info.bankName || !!info.accountNumber || !!info.accountHolder
-  const hasLinks = !!info.kakaopayLink || !!info.tossLink
-  const isEmpty = !hasAccount && !hasLinks && !info.notice
+  const hasLinks = !!info.kakaopayLink
+  const isEmpty = !hasLinks && !info.notice
 
   if (isEmpty) {
     return (
@@ -33,19 +29,7 @@ export function PaymentInfoCard({ info, variant = "panel" }: Props) {
   return (
     <div className="space-y-3">
       <FeeRow entryFee={info.entryFee} />
-      {hasAccount && (
-        <AccountRow
-          bankName={info.bankName}
-          accountNumber={info.accountNumber}
-          accountHolder={info.accountHolder}
-        />
-      )}
-      {hasLinks && (
-        <LinksRow
-          kakaopayLink={info.kakaopayLink}
-          tossLink={info.tossLink}
-        />
-      )}
+      {hasLinks && <LinksRow kakaopayLink={info.kakaopayLink} />}
       {info.notice && <NoticeRow notice={info.notice} />}
     </div>
   )
@@ -64,120 +48,42 @@ function FeeRow({ entryFee }: { entryFee: number }) {
   )
 }
 
-function AccountRow({
-  bankName,
-  accountNumber,
-  accountHolder,
-}: {
-  bankName: string
-  accountNumber: string
-  accountHolder: string
-}) {
-  const [copied, setCopied] = useState(false)
-  const copyText = accountNumber.replace(/[^0-9-]/g, "")
-
-  async function copy() {
-    if (!copyText) return
-    try {
-      await navigator.clipboard.writeText(copyText)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1800)
-    } catch {
-      setCopied(false)
-    }
-  }
-
+function LinksRow({ kakaopayLink }: { kakaopayLink: string }) {
+  // 카카오페이 버튼은 primary 결제 수단. 큰 노란색 버튼 + 안내 텍스트로
+  // 1탭 송금이 가능함을 한눈에 알리고, 그 아래 fallback인 계좌 정보가 보조 역할.
   return (
-    <div className="bg-surface border border-line rounded-xl p-4">
-      <div className="text-[10px] font-black text-ink-500 uppercase tracking-wider mb-2">
-        계좌 송금
-      </div>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          {bankName && (
-            <div className="text-xs font-bold text-ink-700 mb-0.5">
-              {bankName}
-            </div>
-          )}
-          {accountNumber && (
-            <div className="text-base sm:text-lg font-black num text-ink-900 leading-tight break-all">
-              {accountNumber}
-            </div>
-          )}
-          {accountHolder && (
-            <div className="text-xs text-ink-500 mt-0.5">
-              예금주 · <strong className="text-ink-700">{accountHolder}</strong>
-            </div>
-          )}
+    <a
+      href={kakaopayLink}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block bg-[#FEE500] hover:opacity-90 active:scale-[0.99] transition rounded-2xl p-4 shadow-soft"
+    >
+      <div className="flex items-center gap-3">
+        <div
+          className="shrink-0 w-11 h-11 rounded-xl bg-[#3C1E1E] flex items-center justify-center"
+          aria-hidden
+        >
+          <span className="text-lg">💬</span>
         </div>
-        {accountNumber && (
-          <button
-            type="button"
-            onClick={copy}
-            className={`shrink-0 px-3 py-2 rounded-lg text-xs font-black transition ${
-              copied
-                ? "bg-grade-green/15 text-grade-green"
-                : "bg-accent text-white shadow-pop hover:bg-accent/90"
-            }`}
-            aria-label="계좌번호 복사"
-          >
-            {copied ? "복사됨 ✓" : "복사"}
-          </button>
-        )}
+        <div className="min-w-0 flex-1">
+          <div className="text-[10px] font-black uppercase tracking-[0.18em] text-[#3C1E1E]/70 mb-0.5">
+            RECOMMENDED
+          </div>
+          <div className="font-black text-base text-[#3C1E1E] leading-tight">
+            카카오페이로 1탭 송금
+          </div>
+          <div className="text-[11px] text-[#3C1E1E]/70 font-bold mt-0.5">
+            누르면 카카오페이 앱이 자동으로 열려요
+          </div>
+        </div>
+        <span
+          className="shrink-0 text-2xl font-black text-[#3C1E1E]"
+          aria-hidden
+        >
+          →
+        </span>
       </div>
-    </div>
-  )
-}
-
-function LinksRow({
-  kakaopayLink,
-  tossLink,
-}: {
-  kakaopayLink: string
-  tossLink: string
-}) {
-  return (
-    <div className="bg-surface border border-line rounded-xl p-4">
-      <div className="text-[10px] font-black text-ink-500 uppercase tracking-wider mb-2">
-        간편 송금 (앱이 자동으로 열려요)
-      </div>
-      <div className="grid grid-cols-2 gap-2">
-        {kakaopayLink ? (
-          <a
-            href={kakaopayLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-1.5 py-3 rounded-lg bg-[#FEE500] text-[#000000] font-black text-sm hover:opacity-90 transition"
-          >
-            <span aria-hidden>💬</span>
-            카카오페이
-          </a>
-        ) : (
-          <DisabledLink label="카카오페이" />
-        )}
-        {tossLink ? (
-          <a
-            href={tossLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-1.5 py-3 rounded-lg bg-[#0064FF] text-white font-black text-sm hover:opacity-90 transition"
-          >
-            <span aria-hidden>💸</span>
-            토스
-          </a>
-        ) : (
-          <DisabledLink label="토스" />
-        )}
-      </div>
-    </div>
-  )
-}
-
-function DisabledLink({ label }: { label: string }) {
-  return (
-    <span className="flex items-center justify-center py-3 rounded-lg bg-mute text-ink-300 font-black text-sm cursor-not-allowed">
-      {label} (미등록)
-    </span>
+    </a>
   )
 }
 

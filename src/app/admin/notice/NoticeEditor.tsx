@@ -10,25 +10,22 @@ const MAX_LINK = 300
 
 export type PaymentSettings = {
   entry_fee: number
-  bank_name: string
-  account_number: string
-  account_holder: string
   kakaopay_link: string
-  toss_link: string
   signup_notice: string
 }
 
 function toPreview(s: PaymentSettings): PaymentInfo {
   return {
     entryFee: s.entry_fee,
-    bankName: s.bank_name.trim(),
-    accountNumber: s.account_number.trim(),
-    accountHolder: s.account_holder.trim(),
     kakaopayLink: s.kakaopay_link.trim(),
-    tossLink: s.toss_link.trim(),
     notice: s.signup_notice.trim(),
   }
 }
+
+const NOTICE_PRESET = `※ 입금자명은 신청 이름과 동일하게 적어주세요.
+※ 입금 확인까지 1~2시간 정도 걸릴 수 있어요.
+※ 취소·환불은 대회 3일 전까지 가능합니다. 이후로는 환불이 어려우니 다른 분에게 양도해주세요.
+※ 그 외 문의는 운영진 카카오톡으로 편하게 주세요.`
 
 const URL_RE = /^https?:\/\//i
 
@@ -40,8 +37,7 @@ export function NoticeEditor({ initial }: { initial: PaymentSettings }) {
 
   const dirty = JSON.stringify(settings) !== JSON.stringify(saved)
   const linksValid =
-    (!settings.kakaopay_link.trim() || URL_RE.test(settings.kakaopay_link.trim())) &&
-    (!settings.toss_link.trim() || URL_RE.test(settings.toss_link.trim()))
+    !settings.kakaopay_link.trim() || URL_RE.test(settings.kakaopay_link.trim())
   const feeValid =
     Number.isFinite(settings.entry_fee) &&
     settings.entry_fee >= 0 &&
@@ -72,11 +68,7 @@ export function NoticeEditor({ initial }: { initial: PaymentSettings }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           entry_fee: settings.entry_fee,
-          bank_name: settings.bank_name.trim(),
-          account_number: settings.account_number.trim(),
-          account_holder: settings.account_holder.trim(),
           kakaopay_link: settings.kakaopay_link.trim(),
-          toss_link: settings.toss_link.trim(),
           signup_notice: settings.signup_notice,
         }),
       })
@@ -125,9 +117,9 @@ export function NoticeEditor({ initial }: { initial: PaymentSettings }) {
               onChange={(e) =>
                 patch("entry_fee", Number(e.target.value) || 0)
               }
-              className="flex-1 px-4 py-3 bg-mute border-2 border-line focus:border-accent focus:bg-surface rounded-xl outline-none text-base font-black num transition"
+              className="flex-1 min-w-0 w-full px-4 py-3 bg-mute border-2 border-line focus:border-accent focus:bg-surface rounded-xl outline-none text-base font-black num transition"
             />
-            <span className="text-sm font-black text-ink-700">원</span>
+            <span className="shrink-0 text-sm font-black text-ink-700">원</span>
           </div>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {[10000, 15000, 20000, 30000].map((preset) => (
@@ -143,52 +135,15 @@ export function NoticeEditor({ initial }: { initial: PaymentSettings }) {
           </div>
         </Section>
 
-        {/* 계좌 정보 */}
-        <Section
-          title="계좌 정보"
-          desc="참가자가 직접 송금할 때 보여줄 정보예요. 계좌번호 옆에 자동으로 복사 버튼이 붙어요."
-        >
-          <Field label="은행명">
-            <input
-              type="text"
-              value={settings.bank_name}
-              maxLength={MAX_SHORT}
-              placeholder="예: 카카오뱅크"
-              onChange={(e) => patch("bank_name", e.target.value)}
-              className="w-full px-4 py-3 bg-mute border-2 border-line focus:border-accent focus:bg-surface rounded-xl outline-none text-sm font-bold transition"
-            />
-          </Field>
-          <Field label="계좌번호">
-            <input
-              type="text"
-              value={settings.account_number}
-              maxLength={MAX_SHORT}
-              placeholder="예: 3333-12-1234567"
-              onChange={(e) => patch("account_number", e.target.value)}
-              className="w-full px-4 py-3 bg-mute border-2 border-line focus:border-accent focus:bg-surface rounded-xl outline-none text-base font-black num transition"
-            />
-          </Field>
-          <Field label="예금주">
-            <input
-              type="text"
-              value={settings.account_holder}
-              maxLength={MAX_SHORT}
-              placeholder="예: 홍길동"
-              onChange={(e) => patch("account_holder", e.target.value)}
-              className="w-full px-4 py-3 bg-mute border-2 border-line focus:border-accent focus:bg-surface rounded-xl outline-none text-sm font-bold transition"
-            />
-          </Field>
-        </Section>
-
         {/* 간편 송금 */}
         <Section
-          title="간편 송금 링크 (선택)"
-          desc="누르면 모바일에서 카카오페이/토스 앱이 자동으로 열려 송금 화면으로 이어져요. 링크가 없으면 해당 버튼이 미등록 상태로 표시됩니다."
+          title="카카오페이 송금 링크 (선택)"
+          desc="누르면 모바일에서 카카오페이 앱이 자동으로 열려 송금 화면으로 이어져요. 비워두면 계좌 송금만 노출됩니다."
         >
           <Field
             label="카카오페이 송금 코드 / QR 링크"
             hint={
-              <span className="block">
+              <span className="block space-y-0.5">
                 <span className="block">받는 방법:</span>
                 <span className="block ml-2">
                   ① 카카오페이 앱 → 하단 <strong>받기</strong> 탭 →{" "}
@@ -197,12 +152,23 @@ export function NoticeEditor({ initial }: { initial: PaymentSettings }) {
                 <span className="block ml-2">
                   ② <strong>코드 만들기 / 링크 공유</strong> → 링크 복사
                 </span>
-                <span className="block ml-2 mt-0.5">
+                <span className="block ml-2">
                   보통{" "}
                   <code className="font-bold">https://qr.kakaopay.com/</code>{" "}
                   또는{" "}
                   <code className="font-bold">https://kakaopay.me/</code>로
                   시작합니다
+                </span>
+                <span className="block ml-2 text-grade-green font-bold">
+                  ※ 본인이 직접 초기화하지 않는 한{" "}
+                  <strong>만료 없이 영구</strong>
+                </span>
+                <span className="block mt-1.5 p-2 bg-accent-soft/60 border border-accent/20 rounded text-ink-700">
+                  💡 <strong className="text-accent">금액 지정 팁</strong> —
+                  코드를 만들 때 위 <strong>참가비 금액</strong>(
+                  {settings.entry_fee.toLocaleString()}원)을 미리 입력해두면,
+                  사용자가 링크 클릭 시 송금 화면에 금액이 자동으로 채워져
+                  비밀번호만 누르면 끝나요.
                 </span>
               </span>
             }
@@ -222,63 +188,56 @@ export function NoticeEditor({ initial }: { initial: PaymentSettings }) {
               className="w-full px-4 py-3 bg-mute border-2 border-line focus:border-accent focus:bg-surface rounded-xl outline-none text-sm font-bold transition"
             />
           </Field>
-          <Field
-            label="토스 송금 링크"
-            hint={
-              <span className="block">
-                <span className="block">받는 방법:</span>
-                <span className="block ml-2">
-                  ① 토스 앱 → <strong>전체</strong> 메뉴 →{" "}
-                  <strong>토스아이디</strong> 설정 (예: <code>myname</code>)
-                </span>
-                <span className="block ml-2">
-                  ② 자동으로{" "}
-                  <code className="font-bold">https://toss.me/myname</code>이
-                  본인 송금 페이지가 돼요
-                </span>
-              </span>
-            }
-            error={
-              settings.toss_link.trim() &&
-              !URL_RE.test(settings.toss_link.trim())
-                ? "https://로 시작하는 정식 링크여야 해요"
-                : null
-            }
-          >
-            <input
-              type="url"
-              value={settings.toss_link}
-              maxLength={MAX_LINK}
-              placeholder="https://toss.me/myname"
-              onChange={(e) => patch("toss_link", e.target.value)}
-              className="w-full px-4 py-3 bg-mute border-2 border-line focus:border-accent focus:bg-surface rounded-xl outline-none text-sm font-bold transition"
-            />
-          </Field>
           <div className="bg-mute/40 rounded-lg p-3 mt-1 text-[11px] text-ink-700 leading-relaxed">
             <strong className="text-ink-900">참고:</strong> 카카오톡으로 특정
             인물에게 바로 송금을 띄우는 외부 deeplink는 카카오에서 막아두었어요.
-            위처럼 운영진이 본인 카카오페이/토스에서 만든{" "}
+            운영진이 본인 카카오페이에서 만든{" "}
             <strong className="text-ink-900">공개 송금 링크</strong>를 입력해두는
-            게 가장 빠른 길입니다. 모바일에서 클릭 시 해당 앱이 자동으로 열려요.
+            게 가장 빠른 길입니다. 모바일에서 클릭 시 카카오페이 앱이 자동으로
+            열려요.
           </div>
         </Section>
 
         {/* 추가 안내 */}
         <Section
           title="추가 안내 (선택)"
-          desc="입금자명 일치 부탁, 환불 정책 등 자유 텍스트. 문단을 그대로 보여줘요."
+          desc="입금자명 일치 부탁, 환불 정책, 운영진 연락처 등 자유 텍스트. 신청 확인 다이얼로그·대시보드·기록 잠금 화면에 그대로 노출돼요."
         >
           <textarea
             value={settings.signup_notice}
             onChange={(e) =>
               patch("signup_notice", e.target.value.slice(0, MAX_NOTICE))
             }
-            rows={6}
-            placeholder={"예) 입금자명은 신청 이름과 동일하게 부탁드립니다.\n취소·환불은 대회 3일 전까지 가능합니다."}
+            rows={7}
+            placeholder={NOTICE_PRESET}
             className="w-full px-4 py-3 bg-mute border-2 border-line focus:border-accent focus:bg-surface rounded-xl outline-none text-sm leading-relaxed transition resize-y placeholder:text-ink-300 placeholder:font-normal whitespace-pre-wrap font-medium"
           />
-          <div className="text-right text-[11px] text-ink-500 num mt-1">
-            {settings.signup_notice.length} / {MAX_NOTICE}
+          <div className="flex items-center justify-between mt-2 gap-2 flex-wrap">
+            <div className="flex gap-1.5">
+              <button
+                type="button"
+                onClick={() => patch("signup_notice", NOTICE_PRESET)}
+                className="px-3 py-1.5 rounded-lg bg-accent-soft border border-accent/30 text-accent font-black text-xs hover:bg-accent hover:text-white transition"
+              >
+                ✦ 추천 문구로 채우기
+              </button>
+              {settings.signup_notice.trim() && (
+                <button
+                  type="button"
+                  onClick={() => patch("signup_notice", "")}
+                  className="px-3 py-1.5 rounded-lg bg-mute text-ink-500 font-black text-xs hover:bg-line transition"
+                >
+                  비우기
+                </button>
+              )}
+            </div>
+            <span className="text-[11px] text-ink-500 num">
+              {settings.signup_notice.length} / {MAX_NOTICE}
+            </span>
+          </div>
+          <div className="mt-3 bg-mute/40 rounded-lg p-3 text-[11px] text-ink-700 leading-relaxed">
+            <strong className="text-ink-900">추천 문구 미리보기</strong>
+            <pre className="whitespace-pre-wrap wrap-break-word font-sans mt-1.5 text-ink-700">{NOTICE_PRESET}</pre>
           </div>
         </Section>
 
