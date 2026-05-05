@@ -40,11 +40,10 @@ export default async function Image() {
   let startTime: string | null = null
   let endTime: string | null = null
   let venues: string[] = []
-  let participantCount = 0
 
   try {
     const supabase = createServerClient()
-    const [csRes, gymsRes, partsRes] = await Promise.all([
+    const [csRes, gymsRes] = await Promise.all([
       supabase
         .from("contest_settings")
         .select("contest_date, start_time, end_time")
@@ -55,13 +54,11 @@ export default async function Image() {
         .select("name, display_order")
         .eq("active", true)
         .order("display_order"),
-      supabase.from("participants").select("id", { count: "exact", head: true }),
     ])
     contestDate = csRes.data?.contest_date ?? null
     startTime = csRes.data?.start_time ?? null
     endTime = csRes.data?.end_time ?? null
     venues = (gymsRes.data ?? []).map((g) => g.name)
-    participantCount = partsRes.count ?? 0
   } catch (e) {
     console.error("[og-image] supabase fetch error:", e)
   }
@@ -85,26 +82,37 @@ export default async function Image() {
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          justifyContent: "space-between",
-          padding: "72px 80px",
-          background: "#FAFAF7",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#DC2626",
           backgroundImage:
-            "radial-gradient(ellipse 70% 60% at 0% 0%, rgba(220,38,38,0.18), transparent 60%), radial-gradient(ellipse 70% 50% at 100% 100%, rgba(219,39,119,0.12), transparent 60%)",
+            "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255,255,255,0.18), transparent 65%), radial-gradient(ellipse 60% 50% at 100% 100%, rgba(0,0,0,0.18), transparent 65%)",
           fontFamily: "Pretendard",
-          color: "#0A0A0A",
+          color: "#FFFFFF",
+          padding: "72px 80px",
+          position: "relative",
         }}
       >
-        {/* Top row */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        {/* Date pill — top center */}
+        <div
+          style={{
+            position: "absolute",
+            top: 56,
+            left: 0,
+            right: 0,
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
           <div
             style={{
               display: "flex",
               alignItems: "center",
               gap: 12,
-              padding: "10px 22px",
+              padding: "10px 24px",
               borderRadius: 9999,
-              background: "rgba(220,38,38,0.10)",
-              border: "2px solid rgba(220,38,38,0.25)",
+              background: "rgba(255,255,255,0.14)",
+              border: "2px solid rgba(255,255,255,0.35)",
             }}
           >
             <div
@@ -112,113 +120,124 @@ export default async function Image() {
                 width: 10,
                 height: 10,
                 borderRadius: 9999,
-                background: "#DC2626",
+                background: "#FFFFFF",
               }}
             />
-            <span style={{ color: "#DC2626", fontSize: 26, fontWeight: 900, letterSpacing: 4 }}>
+            <span
+              style={{
+                color: "#FFFFFF",
+                fontSize: 24,
+                fontWeight: 900,
+                letterSpacing: 4,
+              }}
+            >
               {dateBadge}
             </span>
           </div>
-          {participantCount > 0 && (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "10px 20px",
-                borderRadius: 9999,
-                background: "#FFFFFF",
-                border: "2px solid #E7E4DD",
-              }}
-            >
-              <div
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: 9999,
-                  background: "#16A34A",
-                }}
-              />
-              <span style={{ fontSize: 22, fontWeight: 700, color: "#3F3F3F" }}>
-                현재 {participantCount}명 신청
-              </span>
-            </div>
-          )}
         </div>
 
-        {/* Title block */}
-        <div style={{ display: "flex", flexDirection: "column", marginTop: 20 }}>
-          <div
-            style={{
-              fontSize: 22,
-              fontWeight: 900,
-              letterSpacing: 6,
-              color: "#6B6B6B",
-              marginBottom: 18,
-            }}
-          >
-            THE CLIMB TOUR
-          </div>
-          <div
-            style={{
-              fontSize: 116,
-              fontWeight: 900,
-              lineHeight: 1.02,
-              letterSpacing: -2,
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
-            <span>볼구력</span>
-            <span style={{ color: "#DC2626" }}>대회.</span>
-          </div>
-          <div
-            style={{
-              fontSize: 30,
-              fontWeight: 700,
-              color: "#3F3F3F",
-              marginTop: 24,
-              maxWidth: 1000,
-            }}
-          >
-            강남 6개 암장 · 하루.
-          </div>
-        </div>
-
-        {/* Bottom strip */}
+        {/* Logo + wordmark — splash aesthetic */}
         <div
           style={{
             display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <svg
+            width="220"
+            height="220"
+            viewBox="0 0 32 32"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              filter: "drop-shadow(0 6px 18px rgba(0,0,0,0.22))",
+            }}
+          >
+            <path
+              d="M 6 22 L 9 8 L 17 6 L 25 10 L 25 19 L 20 25 L 10 25 Z"
+              fill="white"
+            />
+            <circle cx="14" cy="14" r="1.5" fill="#DC2626" opacity="0.35" />
+            <circle cx="19" cy="17" r="1.2" fill="#DC2626" opacity="0.3" />
+          </svg>
+
+          <div
+            style={{
+              marginTop: 28,
+              fontSize: 88,
+              fontWeight: 900,
+              letterSpacing: 4,
+              color: "#FFFFFF",
+              lineHeight: 1,
+            }}
+          >
+            꽉크루
+          </div>
+          <div
+            style={{
+              marginTop: 14,
+              fontSize: 22,
+              fontWeight: 900,
+              letterSpacing: 8,
+              color: "rgba(255,255,255,0.85)",
+              textTransform: "uppercase",
+            }}
+          >
+            Bolguryeok 2026
+          </div>
+        </div>
+
+        {/* Bottom strip — venues + time */}
+        <div
+          style={{
+            position: "absolute",
+            left: 80,
+            right: 80,
+            bottom: 56,
+            display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            paddingTop: 20,
-            borderTop: "2px solid #E7E4DD",
+            paddingTop: 22,
+            borderTop: "2px solid rgba(255,255,255,0.25)",
           }}
         >
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div
               style={{
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: 900,
                 letterSpacing: 4,
-                color: "#A1A1A1",
+                color: "rgba(255,255,255,0.7)",
                 marginBottom: 6,
               }}
             >
               VENUES
             </div>
-            <div style={{ fontSize: 26, fontWeight: 900, color: "#0A0A0A" }}>
+            <div
+              style={{
+                fontSize: 22,
+                fontWeight: 900,
+                color: "#FFFFFF",
+              }}
+            >
               {venueLine}
             </div>
           </div>
           {timeRange && (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-end",
+              }}
+            >
               <div
                 style={{
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: 900,
                   letterSpacing: 4,
-                  color: "#A1A1A1",
+                  color: "rgba(255,255,255,0.7)",
                   marginBottom: 6,
                 }}
               >
@@ -226,9 +245,9 @@ export default async function Image() {
               </div>
               <div
                 style={{
-                  fontSize: 32,
+                  fontSize: 28,
                   fontWeight: 900,
-                  color: "#DC2626",
+                  color: "#FFFFFF",
                   fontVariantNumeric: "tabular-nums",
                 }}
               >

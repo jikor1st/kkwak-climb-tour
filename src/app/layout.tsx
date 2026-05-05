@@ -36,6 +36,9 @@ export const metadata: Metadata = {
     "2026",
   ],
   authors: [{ name: "꽉크루" }],
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "ko_KR",
@@ -43,6 +46,7 @@ export const metadata: Metadata = {
     title: SITE_NAME,
     description: SITE_DESC,
     url: SITE_URL,
+    // images는 app/opengraph-image.tsx 가 자동 주입하므로 여기서 따로 지정하지 않는다.
   },
   twitter: {
     card: "summary_large_image",
