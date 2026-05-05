@@ -1,27 +1,24 @@
 import Link from "next/link"
 import { requireParticipant } from "@/lib/auth/guards"
 import { loadContestData } from "@/lib/contest/load"
-import {
-  CATEGORY_META,
-  GRADE_COLOR,
-  GRADE_LABEL,
-  type Category,
-} from "@/lib/contest/grades"
+import { loadDifficultySystem } from "@/lib/contest/grades"
 import { buildTimeline } from "@/lib/contest/schedule"
 import { CurrentScheduleStatus } from "@/components/CurrentScheduleStatus"
 import { TimelineList } from "@/components/TimelineList"
 import { GymProgressList } from "@/components/GymProgressList"
+import { CountUpNumber } from "@/components/CountUpNumber"
 
 export const dynamic = "force-dynamic"
 
 export default async function DashboardPage() {
   const session = await requireParticipant()
   const participant = session.user.participant!
-  const contest = await loadContestData(
-    participant.id,
-    participant.category as Category,
-  )
-  const meta = CATEGORY_META[participant.category as Category]
+  const [contest, system] = await Promise.all([
+    loadContestData(participant.id, participant.division_id),
+    loadDifficultySystem(),
+  ])
+  const division = contest.division
+  const mainGrade = system.gradesById[participant.main_grade]
   const noWalls = contest.totalCount === 0
   const timeline = buildTimeline(
     contest.settings,
@@ -37,39 +34,61 @@ export default async function DashboardPage() {
   const startEndLabel =
     timeline.startLabel && (timeline.endLabel ?? timeline.computedEndLabel)
       ? `${timeline.startLabel} — ${timeline.endLabel ?? timeline.computedEndLabel}`
-      : "미정"
+      : null
+  const scheduleSummary = [
+    contestDateLabel !== "미정" ? contestDateLabel : null,
+    startEndLabel,
+  ]
+    .filter(Boolean)
+    .join(" · ") || "일정 미정"
 
   return (
-    <div className="max-w-3xl mx-auto px-5 pt-6 pb-20">
-      {/* 현재 일정 상태 */}
+    <div className="max-w-3xl mx-auto px-5 pt-6 pb-8 space-y-4">
+      {/* 1) 지금 — 실시간 상태 */}
       <CurrentScheduleStatus
         timeline={timeline}
         contestDate={contest.settings.contest_date}
       />
 
-      {/* Hero card */}
-      <div className="relative overflow-hidden bg-surface border border-line rounded-3xl p-6 sm:p-7 shadow-card mb-4">
+      {/* 2) 나 — 정체성 + 완등 비율 + 단일 주요 CTA */}
+      <section className="relative overflow-hidden bg-surface border border-line rounded-3xl p-6 shadow-card">
         <div
-          className="absolute -top-16 -right-16 w-48 h-48 rounded-full blur-3xl opacity-30"
-          style={{ background: meta.bg }}
+          className="absolute -top-20 -right-20 w-56 h-56 rounded-full blur-3xl opacity-30 pointer-events-none"
+          style={{ background: division.bg }}
+          aria-hidden
         />
         <div className="relative">
           <div className="flex items-center gap-2 flex-wrap mb-5">
             <span
               className="grade-pill"
               style={{
-                color: meta.color,
-                borderColor: meta.color,
-                background: meta.bg,
+                color: division.color,
+                borderColor: division.color,
+                background: division.bg,
               }}
             >
               <span
                 className="grade-dot"
-                style={{ background: meta.color }}
+                style={{ background: division.color }}
               />
-              {meta.label}조 · {meta.solveLabel}
+              {division.label} · {division.solve_grade_label} 풀이
             </span>
-            <span className="text-xs text-ink-500 font-bold">
+            {mainGrade && (
+              <span
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-black border bg-surface"
+                style={{
+                  color: mainGrade.color_hex,
+                  borderColor: mainGrade.color_hex,
+                }}
+              >
+                <span
+                  className="w-2 h-2 rounded-full"
+                  style={{ background: mainGrade.color_hex }}
+                />
+                평소 {mainGrade.label}
+              </span>
+            )}
+            <span className="text-[11px] text-ink-500 font-bold">
               {participant.participant_type === "crew" ? "꽉크루" : "게스트"}
             </span>
             {!participant.paid && (
@@ -82,66 +101,42 @@ export default async function DashboardPage() {
           <div className="text-xs text-ink-500 mb-1.5 font-bold tracking-wider">
             {participant.display_name}님의 완등 비율
           </div>
-          <div className="flex items-end justify-between gap-3">
-            <div>
-              <div className="text-6xl sm:text-7xl font-black text-accent num leading-none">
-                {contest.completionRate}
-                <span className="text-2xl sm:text-3xl">%</span>
-              </div>
-              <div className="text-sm text-ink-700 mt-2 num">
-                {contest.totalSolved} / {contest.totalCount}개 완등
-              </div>
+          <div className="flex items-end justify-between gap-3 flex-wrap">
+            <div className="text-6xl sm:text-7xl font-black text-accent num leading-none">
+              <CountUpNumber value={contest.completionRate} />
+              <span className="text-2xl sm:text-3xl">%</span>
             </div>
-            <div className="hidden sm:block text-right">
-              <div className="text-xs text-ink-500 font-bold mb-1">
-                평소 푸는 색
-              </div>
-              <span
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-black border-2"
-                style={{
-                  color: GRADE_COLOR[participant.main_grade] ?? "#6B7280",
-                  borderColor:
-                    GRADE_COLOR[participant.main_grade] ?? "#6B7280",
-                  background: "#FFFFFF",
-                }}
-              >
-                <span
-                  className="w-2.5 h-2.5 rounded-full"
-                  style={{
-                    background: GRADE_COLOR[participant.main_grade] ?? "#6B7280",
-                  }}
-                />
-                {GRADE_LABEL[participant.main_grade] ?? participant.main_grade}
-              </span>
+            <div className="text-sm text-ink-700 num font-bold pb-1">
+              {contest.totalSolved} / {contest.totalCount}개 완등
             </div>
           </div>
 
-          <div className="mt-5 h-2 bg-mute rounded-full overflow-hidden">
+          <div className="mt-4 h-2 bg-mute rounded-full overflow-hidden">
             <div
               className="h-full bg-accent rounded-full transition-all"
               style={{ width: `${contest.completionRate}%` }}
             />
           </div>
 
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
-            <Link
-              href="/record"
-              className="inline-flex items-center justify-center gap-2 py-4 bg-accent hover:bg-accent/90 transition rounded-xl font-black text-white text-base shadow-pop"
-            >
-              풀이 기록하기 →
-            </Link>
+          <Link
+            href="/record"
+            className="mt-5 inline-flex w-full items-center justify-center gap-2 py-4 bg-accent hover:bg-accent/90 hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(220,38,38,0.28)] active:translate-y-0 transition-all rounded-xl font-black text-white text-base shadow-pop"
+          >
+            풀이 기록하기 →
+          </Link>
+          <div className="mt-3 text-center">
             <Link
               href="/ranking"
-              className="inline-flex items-center justify-center gap-2 py-4 px-5 bg-ink-900 hover:bg-ink-700 transition rounded-xl font-black text-white text-sm"
+              className="text-xs font-bold text-ink-500 hover:text-ink-900 transition inline-flex items-center gap-1"
             >
-              전체 순위 →
+              전체 순위 보기 →
             </Link>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* 지점별 진행 */}
-      <div className="bg-surface border border-line rounded-3xl p-5 sm:p-6 shadow-soft mb-4">
+      {/* 3) 행동 — 지점별 진행 */}
+      <section className="bg-surface border border-line rounded-3xl p-5 sm:p-6 shadow-soft">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-black">지점별 진행</h2>
           <Link
@@ -169,53 +164,24 @@ export default async function DashboardPage() {
             }))}
             timeline={timeline}
             contestDate={contest.settings.contest_date}
-            accentColor={meta.color}
+            accentColor={division.color}
           />
         )}
-      </div>
+      </section>
 
-      {/* 대회 정보 */}
-      <div className="bg-surface border border-line rounded-2xl p-5 shadow-soft mb-4">
-        <div className="text-xs text-ink-500 uppercase tracking-wider mb-3 font-black">
-          대회 정보
-        </div>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-ink-500">일시</span>
-            <span className="font-black">{contestDateLabel}</span>
+      {/* 4) 참고 — 전체 일정 */}
+      <section className="bg-surface border border-line rounded-2xl p-5 shadow-soft">
+        <div className="flex items-baseline justify-between gap-3 mb-4">
+          <h2 className="text-base font-black">전체 일정</h2>
+          <div className="text-xs text-ink-500 font-bold truncate num">
+            {scheduleSummary}
           </div>
-          <div className="flex justify-between">
-            <span className="text-ink-500">시간</span>
-            <span className="font-black num">{startEndLabel}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-ink-500">참가 유형</span>
-            <span className="font-black">
-              {participant.participant_type === "crew" ? "꽉크루 멤버" : "게스트"}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* 일정 타임라인 */}
-      <div className="bg-surface border border-line rounded-2xl p-5 shadow-soft">
-        <div className="text-xs text-ink-500 uppercase tracking-wider mb-3 font-black">
-          전체 일정
         </div>
         <TimelineList
           timeline={timeline}
           contestDate={contest.settings.contest_date}
         />
-      </div>
-
-      <div className="mt-6 text-center">
-        <Link
-          href="/"
-          className="inline-block text-xs text-ink-500 hover:text-ink-900 transition font-bold"
-        >
-          ← 메인으로
-        </Link>
-      </div>
+      </section>
     </div>
   )
 }

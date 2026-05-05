@@ -1,57 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
-
-const GRADES = {
-  purple: { label: '보라', color: '#9333EA', bg: '#FAF5FF', soft: '#F3E8FF' },
-  pink: { label: '핑크', color: '#DB2777', bg: '#FDF2F8', soft: '#FCE7F3' },
-  red: { label: '빨강', color: '#DC2626', bg: '#FEF2F2', soft: '#FEE2E2' },
-  blue: { label: '파랑', color: '#2563EB', bg: '#EFF6FF', soft: '#DBEAFE' },
-} as const
-
-const CATEGORIES = {
-  advanced: {
-    label: '상급',
-    solveColor: '#DC2626',
-    solveBg: '#FEF2F2',
-    solveLabel: '빨강 풀이',
-    desc: '대부분 빨강을 풀 수 있다면',
-  },
-  intermediate: {
-    label: '중급',
-    solveColor: '#2563EB',
-    solveBg: '#EFF6FF',
-    solveLabel: '파랑 풀이',
-    desc: '파랑을 안정적으로 푼다면',
-  },
-  beginner: {
-    label: '초급',
-    solveColor: '#16A34A',
-    solveBg: '#F0FDF4',
-    solveLabel: '초록 풀이',
-    desc: '초록부터 차근차근',
-  },
-} as const
-
-type GradeKey = keyof typeof GRADES
-type CategoryKey = keyof typeof CATEGORIES
-
-const RECOMMENDED: Record<GradeKey, CategoryKey[]> = {
-  purple: ['advanced'],
-  pink: ['advanced', 'intermediate'],
-  red: ['intermediate', 'beginner'],
-  blue: ['beginner'],
-}
-
-const RECOMMEND_HINT: Record<GradeKey, string> = {
-  purple: '평소 보라를 푸시면 상급(빨강 풀이) 추천.',
-  pink: '핑크 → 빨강 절반 이상 풀면 상급, 지점따라 갈리면 중급.',
-  red: '빨강 → 안정적이면 중급, 지점 다 돌기 빠듯하면 초급.',
-  blue: '평소 파랑을 푸시면 초급(초록 풀이) 추천.',
-}
+import type {
+  Grade,
+  Division,
+  DivisionRecommendation,
+} from '@/lib/contest/grades'
 
 const WEEKDAY_KO = ['일', '월', '화', '수', '목', '금', '토']
 
@@ -59,22 +16,37 @@ function formatContestDateShort(value: string | null): string {
   if (!value) return '대회 일정 미정'
   const d = new Date(`${value}T00:00:00`)
   if (Number.isNaN(d.getTime())) return value
-  return `${d.getMonth() + 1}월 ${d.getDate()}일(${WEEKDAY_KO[d.getDay()]}) · 강남 6개 지점 투어`
+  return `${d.getMonth() + 1}월 ${d.getDate()}일(${WEEKDAY_KO[d.getDay()]}) · 강남 6개 암장 볼구력 투어`
+}
+
+function softBg(hex: string): string {
+  const h = hex.replace('#', '')
+  if (h.length !== 6) return '#F4F4F4'
+  return `#${h}1A`
 }
 
 export function SignupForm({
   signupNotice,
   contestDate,
+  grades,
+  divisions,
+  recommendations,
 }: {
   signupNotice: string
   contestDate: string | null
+  grades: Grade[]
+  divisions: Division[]
+  recommendations: DivisionRecommendation[]
 }) {
   const router = useRouter()
   const { data: session, status, update } = useSession()
 
   useEffect(() => {
     update()
-  }, [update])
+    // 마운트 시 1회만 세션 강제 갱신.
+    // [update]를 의존성으로 두면 update reference가 매 갱신마다 바뀌어 무한 루프.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -86,17 +58,38 @@ export function SignupForm({
     }
   }, [status, session, router])
 
-  const [displayName, setDisplayName] = useState('')
-  const [mainGrade, setMainGrade] = useState<GradeKey | ''>('')
-  const [category, setCategory] = useState<CategoryKey | ''>('')
+  const gradeMap = useMemo(
+    () => Object.fromEntries(grades.map((g) => [g.id, g])),
+    [grades],
+  )
+  const recsByGrade = useMemo(() => {
+    const m = new Map<string, Set<string>>()
+    for (const r of recommendations) {
+      const set = m.get(r.challenge_grade) ?? new Set<string>()
+      set.add(r.division_id)
+      m.set(r.challenge_grade, set)
+    }
+    return m
+  }, [recommendations])
+
+  const [mainGrade, setMainGrade] = useState<string>('')
+  const [divisionId, setDivisionId] = useState<string>('')
   const [participantType, setParticipantType] = useState<'crew' | 'guest'>('crew')
   const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [confirming, setConfirming] = useState(false)
 
-  const isValid = !!(displayName.trim() && mainGrade && category && agreedToTerms)
-  const recommended = mainGrade ? RECOMMENDED[mainGrade] : []
+  const sessionName = (session?.user?.name ?? '').trim()
+  const isValid = !!(sessionName && mainGrade && divisionId && agreedToTerms)
+  const recommendedSet = mainGrade ? recsByGrade.get(mainGrade) : undefined
+  const selectedGrade = mainGrade ? gradeMap[mainGrade] : null
+  const selectedDivision = divisionId
+    ? divisions.find((d) => d.id === divisionId)
+    : null
+  const selectedDivisionGrade = selectedDivision
+    ? gradeMap[selectedDivision.solve_grade]
+    : null
 
   function handleSubmit(e?: { preventDefault: () => void }) {
     e?.preventDefault()
@@ -117,9 +110,8 @@ export function SignupForm({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          displayName: displayName.trim(),
           mainGrade,
-          category,
+          divisionId,
           participantType,
           agreedToTerms,
         }),
@@ -153,61 +145,59 @@ export function SignupForm({
       </div>
 
       <form id="signup-form" onSubmit={handleSubmit} className="max-w-xl mx-auto px-5 pt-5 space-y-3">
-        {/* 1. 이름 */}
-        <Section index={1} title="이름">
-          <input
-            type="text"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            className="w-full px-4 py-3.5 bg-mute border-2 border-line focus:border-accent focus:bg-surface rounded-xl outline-none text-base font-bold transition placeholder:font-normal placeholder:text-ink-300"
-            placeholder="이름"
-            maxLength={20}
-          />
-          {displayName && (
-            <div className="mt-2 text-xs text-ink-500">
-              {displayName.trim().length}/20자
-            </div>
-          )}
-        </Section>
+        {sessionName && (
+          <div className="bg-mute/60 border border-line rounded-xl px-4 py-3 text-xs text-ink-700 leading-relaxed">
+            <strong className="text-ink-900">{sessionName}</strong> 님으로
+            신청합니다. 이름을 바꾸려면 신청 완료 후 내 계정에서 변경하세요.
+          </div>
+        )}
 
-        {/* 2. 평소 푸는 색 */}
+        {/* 1. 평소 푸는 색 */}
         <Section
-          index={2}
+          index={1}
           title="평소 푸는 색"
           desc="최근 두 달, 두 곳 이상에서 풀어본 가장 높은 색"
         >
           <div className="grid grid-cols-2 gap-2.5">
-            {(Object.entries(GRADES) as [GradeKey, typeof GRADES[GradeKey]][]).map(([key, g]) => {
-              const selected = mainGrade === key
+            {grades.map((g) => {
+              const selected = mainGrade === g.id
+              const bg = softBg(g.color_hex)
               return (
                 <button
-                  key={key}
+                  key={g.id}
                   type="button"
-                  onClick={() => setMainGrade(key)}
+                  onClick={() => {
+                    setMainGrade(g.id)
+                    const recs = recsByGrade.get(g.id)
+                    if (recs && divisionId && !recs.has(divisionId)) {
+                      const firstRec = divisions.find((d) => recs.has(d.id))
+                      if (firstRec) setDivisionId(firstRec.id)
+                    }
+                  }}
                   className="relative flex items-center justify-center gap-2.5 py-5 rounded-xl border-2 font-black text-base transition-all"
                   style={
                     selected
                       ? {
                           color: '#FFFFFF',
-                          background: g.color,
-                          borderColor: g.color,
-                          boxShadow: `0 4px 12px ${g.color}40, 0 8px 24px ${g.color}20`,
+                          background: g.color_hex,
+                          borderColor: g.color_hex,
+                          boxShadow: `0 4px 12px ${g.color_hex}40, 0 8px 24px ${g.color_hex}20`,
                           transform: 'translateY(-1px)',
                         }
                       : {
-                          color: g.color,
-                          background: g.bg,
-                          borderColor: g.soft,
+                          color: g.color_hex,
+                          background: bg,
+                          borderColor: bg,
                         }
                   }
                 >
                   <span
                     className="rounded-full ring-2"
                     style={{
-                      background: selected ? '#FFFFFF' : g.color,
+                      background: selected ? '#FFFFFF' : g.color_hex,
                       width: 14,
                       height: 14,
-                      boxShadow: selected ? `0 0 0 2px ${g.color}` : 'none',
+                      boxShadow: selected ? `0 0 0 2px ${g.color_hex}` : 'none',
                     }}
                   />
                   {g.label}
@@ -222,87 +212,85 @@ export function SignupForm({
           </div>
         </Section>
 
-        {/* 3. 카테고리 */}
+        {/* 3. 부 (참가 카테고리) */}
         <Section
-          index={3}
-          title="참가 카테고리"
+          index={2}
+          title="참가 부"
           desc={
             mainGrade
               ? '추천 외에도 자유롭게 고를 수 있어요'
-              : '참가하고 싶은 카테고리를 골라주세요'
+              : '참가하고 싶은 부를 골라주세요'
           }
         >
           <div className="space-y-2.5">
-            {(Object.entries(CATEGORIES) as [CategoryKey, typeof CATEGORIES[CategoryKey]][]).map(
-              ([key, c]) => {
-                const selected = category === key
-                const isRecommended = recommended.includes(key)
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setCategory(key)}
-                    className="relative w-full flex items-center gap-3 p-4 rounded-xl border-2 text-left transition-all"
-                    style={
-                      selected
-                        ? {
-                            background: c.solveBg,
-                            borderColor: c.solveColor,
-                            boxShadow: `0 4px 12px ${c.solveColor}25`,
-                          }
-                        : { background: '#FFFFFF', borderColor: '#E7E4DD' }
-                    }
+            {divisions.map((d) => {
+              const selected = divisionId === d.id
+              const isRecommended = recommendedSet?.has(d.id) ?? false
+              const grade = gradeMap[d.solve_grade]
+              const color = grade?.color_hex ?? '#6B7280'
+              const bg = softBg(color)
+              return (
+                <button
+                  key={d.id}
+                  type="button"
+                  onClick={() => setDivisionId(d.id)}
+                  className="relative w-full flex items-center gap-3 p-4 rounded-xl border-2 text-left transition-all"
+                  style={
+                    selected
+                      ? {
+                          background: bg,
+                          borderColor: color,
+                          boxShadow: `0 4px 12px ${color}25`,
+                        }
+                      : { background: '#FFFFFF', borderColor: '#E7E4DD' }
+                  }
+                >
+                  <span
+                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-black text-sm"
+                    style={{
+                      background: selected ? color : bg,
+                      color: selected ? '#FFFFFF' : color,
+                    }}
                   >
-                    <span
-                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 font-black text-sm"
-                      style={{
-                        background: selected ? c.solveColor : c.solveBg,
-                        color: selected ? '#FFFFFF' : c.solveColor,
-                      }}
-                    >
-                      {c.label[0]}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-black text-base" style={{ color: selected ? c.solveColor : '#0A0A0A' }}>
-                          {c.label}조
-                        </span>
-                        <span
-                          className="text-xs font-bold px-2 py-0.5 rounded-full"
-                          style={{ background: c.solveBg, color: c.solveColor }}
-                        >
-                          {c.solveLabel}
-                        </span>
-                        {isRecommended && (
-                          <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-accent text-white tracking-wider">
-                            추천
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-xs text-ink-500 mt-0.5">{c.desc}</div>
-                    </div>
-                    {selected && (
-                      <span
-                        className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-black"
-                        style={{ background: c.solveColor }}
-                      >
-                        ✓
+                    {d.label[0]}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-black text-base" style={{ color: selected ? color : '#0A0A0A' }}>
+                        {d.label}
                       </span>
+                      <span
+                        className="text-xs font-bold px-2 py-0.5 rounded-full"
+                        style={{ background: bg, color }}
+                      >
+                        {grade?.label ?? d.solve_grade} 풀이
+                      </span>
+                      {isRecommended && (
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-accent text-white tracking-wider">
+                          추천
+                        </span>
+                      )}
+                    </div>
+                    {d.desc_text && (
+                      <div className="text-xs text-ink-500 mt-0.5">{d.desc_text}</div>
                     )}
-                  </button>
-                )
-              },
-            )}
+                  </div>
+                  {selected && (
+                    <span
+                      className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-black"
+                      style={{ background: color }}
+                    >
+                      ✓
+                    </span>
+                  )}
+                </button>
+              )
+            })}
           </div>
-          {mainGrade && (
-            <p className="mt-3 text-xs text-ink-500 leading-relaxed bg-mute rounded-lg px-3 py-2.5">
-              💡 {RECOMMEND_HINT[mainGrade]}
-            </p>
-          )}
         </Section>
 
         {/* 4. 참가 유형 */}
-        <Section index={4} title="참가 유형">
+        <Section index={3} title="참가 유형">
           <div className="grid grid-cols-2 gap-2.5">
             {(
               [
@@ -333,7 +321,7 @@ export function SignupForm({
         </Section>
 
         {/* 5. 약관 */}
-        <Section index={5} title="약관 동의">
+        <Section index={4} title="약관 동의">
           <button
             type="button"
             onClick={() => setAgreedToTerms(!agreedToTerms)}
@@ -362,12 +350,12 @@ export function SignupForm({
         </Section>
 
         {/* 라이브 미리보기 */}
-        {mainGrade && category && (
+        {selectedGrade && selectedDivision && selectedDivisionGrade && (
           <div className="relative overflow-hidden rounded-2xl bg-ink-900 p-5 sm:p-6">
             <div
               className="absolute inset-0 opacity-30"
               style={{
-                background: `radial-gradient(ellipse 80% 60% at 0% 0%, ${GRADES[mainGrade].color}80, transparent 60%), radial-gradient(ellipse 70% 50% at 100% 100%, ${CATEGORIES[category].solveColor}80, transparent 60%)`,
+                background: `radial-gradient(ellipse 80% 60% at 0% 0%, ${selectedGrade.color_hex}80, transparent 60%), radial-gradient(ellipse 70% 50% at 100% 100%, ${selectedDivisionGrade.color_hex}80, transparent 60%)`,
               }}
             />
             <div className="relative">
@@ -375,14 +363,14 @@ export function SignupForm({
                 YOUR ENTRY
               </div>
               <div className="font-black text-lg sm:text-xl leading-snug text-white">
-                <span className="text-white">{displayName.trim() || '____'}</span>
+                <span className="text-white">{sessionName || '____'}</span>
                 <span className="text-white/70">님은 </span>
-                <span style={{ color: CATEGORIES[category].solveColor }}>
-                  {CATEGORIES[category].label}조
+                <span style={{ color: selectedDivisionGrade.color_hex }}>
+                  {selectedDivision.label}
                 </span>
                 <span className="text-white/70">에서 </span>
-                <span style={{ color: CATEGORIES[category].solveColor }}>
-                  {CATEGORIES[category].solveLabel}
+                <span style={{ color: selectedDivisionGrade.color_hex }}>
+                  {selectedDivisionGrade.label} 풀이
                 </span>
                 <span className="text-white/70">로 신청합니다</span>
               </div>
@@ -390,9 +378,9 @@ export function SignupForm({
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-white/90 font-bold">
                   <span
                     className="w-2 h-2 rounded-full"
-                    style={{ background: GRADES[mainGrade].color }}
+                    style={{ background: selectedGrade.color_hex }}
                   />
-                  평소 {GRADES[mainGrade].label}
+                  평소 {selectedGrade.label}
                 </span>
                 <span className="text-white/40">→</span>
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-white/90 font-bold">
@@ -411,16 +399,16 @@ export function SignupForm({
       </form>
 
       {/* Sticky submit */}
-      <div className="fixed bottom-0 left-0 right-0 bg-paper/95 backdrop-blur border-t border-line px-5 py-3.5 safe-bottom">
+      <div className="fixed bottom-0 left-0 right-0 bg-paper/75 backdrop-blur-xl backdrop-saturate-150 border-t border-line px-5 py-3.5 safe-bottom">
         <div className="max-w-xl mx-auto flex items-center gap-3">
           <div className="flex-1 text-xs text-ink-500">
             {!isValid && (
               <>
                 <span className="font-bold text-ink-700">남은 항목:</span>{' '}
                 {[
-                  !displayName.trim() && '이름',
+                  !sessionName && '이름',
                   !mainGrade && '평소 색',
-                  !category && '카테고리',
+                  !divisionId && '참가 부',
                   !agreedToTerms && '약관',
                 ]
                   .filter(Boolean)

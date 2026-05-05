@@ -116,8 +116,8 @@ export function GymProgressList({
         const isTarget = target?.gymId === gym.id
 
         const cardCls = isTarget
-          ? "flex items-center gap-3 p-3.5 rounded-xl border-2 border-accent bg-accent-soft transition group shadow-sm"
-          : "flex items-center gap-3 p-3.5 rounded-xl border border-line hover:border-line-strong transition group"
+          ? "flex items-center gap-3 p-3.5 rounded-xl border-2 border-accent bg-accent-soft hover:-translate-y-0.5 hover:shadow-card active:translate-y-0 transition-all group shadow-sm"
+          : "flex items-center gap-3 p-3.5 rounded-xl border border-line hover:border-line-strong hover:-translate-y-0.5 hover:shadow-soft active:translate-y-0 transition-all group"
 
         const indexCls = isTarget
           ? "w-9 h-9 rounded-lg bg-accent flex items-center justify-center text-xs font-black text-white shrink-0"

@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og"
 import { createServerClient } from "@/lib/supabase/server"
 
-export const alt = "꽉크루 클라이밍 투어 2026"
+export const alt = "꽉크루 볼구력 대회 2026"
 export const size = { width: 1200, height: 630 }
 export const contentType = "image/png"
 
@@ -169,10 +169,8 @@ export default async function Image() {
               flexDirection: "column",
             }}
           >
-            <span>강남 6개 지점,</span>
-            <span>
-              <span style={{ color: "#DC2626" }}>하루 안에</span> 정주행.
-            </span>
+            <span>볼구력</span>
+            <span style={{ color: "#DC2626" }}>대회.</span>
           </div>
           <div
             style={{
@@ -183,7 +181,7 @@ export default async function Image() {
               maxWidth: 1000,
             }}
           >
-            평소보다 살짝 쉬운 색을 정한 시간 안에 누가 더 많이 풀까?
+            강남 6개 암장 · 하루.
           </div>
         </div>
 

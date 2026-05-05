@@ -20,12 +20,18 @@ type Wall = {
   pending?: boolean
 }
 type GradeCount = { wall_id: string; grade: string; total_count: number }
+type GradeMeta = {
+  key: string
+  label: string
+  color: string
+  divisionLabel: string
+}
 
-const GRADES = [
-  { key: "red", label: "빨강", color: "#DC2626", bg: "#FEF2F2", solveLabel: "상급" },
-  { key: "blue", label: "파랑", color: "#2563EB", bg: "#EFF6FF", solveLabel: "중급" },
-  { key: "green", label: "초록", color: "#16A34A", bg: "#F0FDF4", solveLabel: "초급" },
-] as const
+function softBg(hex: string): string {
+  const h = hex.replace("#", "")
+  if (h.length !== 6) return "#F4F4F4"
+  return `#${h}1A`
+}
 
 type SaveState = "idle" | "saving" | "saved" | "error"
 
@@ -33,11 +39,14 @@ export function WallsEditor({
   gyms: initialGyms,
   walls: initialWalls,
   gradeCounts: initialCounts,
+  grades,
 }: {
   gyms: Gym[]
   walls: Wall[]
   gradeCounts: GradeCount[]
+  grades: GradeMeta[]
 }) {
+  const GRADES = grades
   const [gyms, setGyms] = useState<Gym[]>(initialGyms)
   const [walls, setWalls] = useState<Wall[]>(initialWalls)
   const [counts, setCounts] = useState<Record<string, number>>(() => {
@@ -282,8 +291,10 @@ export function WallsEditor({
           </h1>
           <p className="text-sm text-ink-700 mt-1.5">
             지점마다 벽을 추가하고, 각 벽의{" "}
-            <span className="text-accent font-black">빨강·파랑·초록</span> 문제
-            수를 입력해주세요.
+            <span className="text-accent font-black">
+              {GRADES.map((g) => g.label).join("·")}
+            </span>{" "}
+            문제 수를 입력해주세요.
           </p>
         </div>
         <div className="flex items-center gap-3 text-sm">
@@ -375,7 +386,12 @@ export function WallsEditor({
               ) : (
                 <>
                   {/* Header row (desktop) */}
-                  <div className="hidden sm:grid grid-cols-[minmax(0,1fr)_repeat(3,8.5rem)_2.5rem] gap-3 px-5 py-2.5 text-[10px] uppercase tracking-wider font-black text-ink-500 border-b border-line">
+                  <div
+                    className="hidden sm:grid gap-3 px-5 py-2.5 text-[10px] uppercase tracking-wider font-black text-ink-500 border-b border-line"
+                    style={{
+                      gridTemplateColumns: `minmax(0,1fr) repeat(${GRADES.length}, 8.5rem) 2.5rem`,
+                    }}
+                  >
                     <div>벽 이름</div>
                     {GRADES.map((g) => (
                       <div key={g.key} className="flex items-center gap-1.5">
@@ -383,7 +399,8 @@ export function WallsEditor({
                           className="w-2 h-2 rounded-full"
                           style={{ background: g.color }}
                         />
-                        {g.label} ({g.solveLabel})
+                        {g.label}
+                        {g.divisionLabel ? ` (${g.divisionLabel})` : ""}
                       </div>
                     ))}
                     <div />
@@ -394,6 +411,7 @@ export function WallsEditor({
                         key={wall.id}
                         wall={wall}
                         counts={counts}
+                        grades={GRADES}
                         onRename={(name) => renameWall(wall.id, name)}
                         onCountChange={(grade, raw) =>
                           setCount(wall.id, grade, raw)
@@ -485,7 +503,7 @@ export function WallsEditor({
           deleteTarget ? (
             <>
               <strong className="text-ink-900">{deleteTarget.name}</strong> 벽과
-              연결된 빨강·파랑·초록 문제 수가 함께 삭제됩니다. 이 작업은 되돌릴 수
+              연결된 모든 색의 문제 수가 함께 삭제됩니다. 이 작업은 되돌릴 수
               없어요.
             </>
           ) : null
@@ -505,19 +523,26 @@ export function WallsEditor({
 function WallRow({
   wall,
   counts,
+  grades,
   onRename,
   onCountChange,
   onDelete,
 }: {
   wall: Wall
   counts: Record<string, number>
+  grades: GradeMeta[]
   onRename: (name: string) => void
   onCountChange: (grade: string, raw: string | number) => void
   onDelete: () => void
 }) {
   return (
     <li className="px-5 py-3 hover:bg-mute/30 transition group">
-      <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_repeat(3,8.5rem)_2.5rem] gap-3 items-center">
+      <div
+        className="flex flex-col sm:grid gap-3 sm:items-center"
+        style={{
+          gridTemplateColumns: `minmax(0,1fr) repeat(${grades.length}, 8.5rem) 2.5rem`,
+        }}
+      >
         <input
           type="text"
           value={wall.name}
@@ -525,8 +550,11 @@ function WallRow({
           placeholder="벽 이름"
           className="w-full px-3 py-2.5 bg-mute focus:bg-surface border border-transparent focus:border-ink-900 rounded-lg outline-none text-sm font-bold transition"
         />
-        <div className="grid grid-cols-3 sm:contents gap-2">
-          {GRADES.map((g) => (
+        <div
+          className="grid sm:contents gap-2"
+          style={{ gridTemplateColumns: `repeat(${grades.length}, minmax(0, 1fr))` }}
+        >
+          {grades.map((g) => (
             <Stepper
               key={g.key}
               grade={g}
@@ -561,17 +589,18 @@ function Stepper({
   value,
   onChange,
 }: {
-  grade: { key: string; label: string; color: string; bg: string }
+  grade: { key: string; label: string; color: string }
   value: number
   onChange: (v: number) => void
 }) {
   const isZero = value === 0
+  const bg = softBg(grade.color)
   return (
     <div
       className={`flex items-center rounded-lg border transition ${
         isZero ? "border-line bg-surface" : "border-transparent"
       }`}
-      style={!isZero ? { background: grade.bg, borderColor: grade.color } : undefined}
+      style={!isZero ? { background: bg, borderColor: grade.color } : undefined}
     >
       <button
         type="button"

@@ -6,6 +6,10 @@ export async function requireAuth() {
   if (!session?.user) {
     redirect("/login")
   }
+  // 로그인 했지만 회원 이름이 비어있으면 강제 입력
+  if (!session.user.name?.trim()) {
+    redirect("/onboarding/name")
+  }
   return session
 }
 

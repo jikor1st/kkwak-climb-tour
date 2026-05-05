@@ -1,7 +1,6 @@
 import Link from "next/link"
 import { requireParticipant } from "@/lib/auth/guards"
 import { loadContestData } from "@/lib/contest/load"
-import { CATEGORY_META, type Category } from "@/lib/contest/grades"
 import { isContestOpen } from "@/lib/contest/timeline-now"
 import { RecordForm } from "./RecordForm"
 
@@ -14,11 +13,8 @@ export default async function RecordPage({
 }) {
   const session = await requireParticipant()
   const participant = session.user.participant!
-  const contest = await loadContestData(
-    participant.id,
-    participant.category as Category,
-  )
-  const meta = CATEGORY_META[participant.category as Category]
+  const contest = await loadContestData(participant.id, participant.division_id)
+  const division = contest.division
   const params = await searchParams
 
   const initialGymId =
@@ -53,10 +49,9 @@ export default async function RecordPage({
       participant={{
         id: participant.id,
         display_name: participant.display_name,
-        category: participant.category as Category,
         paid: participant.paid,
       }}
-      meta={meta}
+      division={division}
       grade={contest.grade}
       gyms={contest.gyms}
       initialGymId={initialGymId}
@@ -75,7 +70,7 @@ export default async function RecordPage({
         ) : noWalls ? (
           <EmptyState
             title="벽 정보가 아직 없어요"
-            desc={`각 지점의 ${meta.solveLabel} 문제 수가 입력되면 여기서 기록할 수 있어요.`}
+            desc={`각 지점의 ${division.solve_grade_label} 풀이 문제 수가 입력되면 여기서 기록할 수 있어요.`}
           />
         ) : null
       }

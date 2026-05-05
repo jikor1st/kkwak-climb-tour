@@ -2,6 +2,7 @@ import Link from "next/link"
 import { requireAuth } from "@/lib/auth/guards"
 import { signOut } from "@/lib/auth/auth"
 import { ModeToggle } from "@/components/ModeToggle"
+import { BottomNav } from "@/components/BottomNav"
 
 export default async function ParticipantLayout({
   children,
@@ -13,7 +14,7 @@ export default async function ParticipantLayout({
 
   return (
     <div className="min-h-screen bg-paper">
-      <header className="sticky top-0 z-40 bg-paper/95 backdrop-blur-md border-b border-line">
+      <header className="sticky top-0 z-40 bg-paper/75 backdrop-blur-xl backdrop-saturate-150 border-b border-line">
         <div className="max-w-3xl mx-auto px-5 h-14 flex items-center justify-between gap-3">
           <Link href="/dashboard" className="flex items-center gap-1.5 group shrink-0">
             <span className="text-[10px] uppercase tracking-[0.2em] font-black text-accent">
@@ -32,12 +33,6 @@ export default async function ParticipantLayout({
             >
               메인
             </Link>
-            <Link
-              href="/ranking"
-              className="text-xs text-ink-500 hover:text-ink-900 transition font-bold whitespace-nowrap"
-            >
-              순위
-            </Link>
             <form
               action={async () => {
                 "use server"
@@ -54,7 +49,8 @@ export default async function ParticipantLayout({
           </div>
         </div>
       </header>
-      <main>{children}</main>
+      <main className={session.user.participant ? "pb-32" : ""}>{children}</main>
+      {session.user.participant && <BottomNav />}
     </div>
   )
 }

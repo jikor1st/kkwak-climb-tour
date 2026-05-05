@@ -1,5 +1,5 @@
 import { createServerClient } from "@/lib/supabase/server"
-import { CATEGORY_TO_GRADE, type Category, type SolveGrade } from "./grades"
+import { loadDifficultySystem, buildDivisionView, type DivisionView } from "./grades"
 import type { ScheduleBreak } from "./schedule"
 
 export type WallData = {
@@ -35,16 +35,23 @@ export type ContestData = {
   totalSolved: number
   totalCount: number
   completionRate: number
-  grade: SolveGrade
+  grade: string
+  division: DivisionView
   settings: ContestSettings
 }
 
 export async function loadContestData(
   participantId: string,
-  category: Category,
+  divisionId: string,
 ): Promise<ContestData> {
   const supabase = createServerClient()
-  const grade = CATEGORY_TO_GRADE[category]
+  const system = await loadDifficultySystem()
+  const division = system.divisionsById[divisionId]
+  if (!division) {
+    throw new Error(`Unknown division_id: ${divisionId}`)
+  }
+  const view = buildDivisionView(division, system.gradesById[division.solve_grade])
+  const grade = division.solve_grade
 
   const [gymsRes, wallsRes, gcRes, solvesRes, durRes, settingsRes, breaksRes] =
     await Promise.all([
@@ -150,6 +157,7 @@ export async function loadContestData(
     totalCount,
     completionRate,
     grade,
+    division: view,
     settings,
   }
 }

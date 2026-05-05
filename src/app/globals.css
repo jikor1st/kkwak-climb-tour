@@ -145,6 +145,44 @@
   }
 }
 
+@keyframes splash-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes splash-fadeup {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes splash-out {
+  0%, 70% {
+    opacity: 1;
+    visibility: visible;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
 @layer utilities {
   .dialog-enter {
     animation: dialog-up 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -160,6 +198,22 @@
 
   .urgent-pulse {
     animation: urgent-pulse 1s ease-in-out infinite;
+  }
+
+  .splash-screen {
+    animation: splash-out 2.2s 0.05s forwards;
+  }
+  .splash-logo {
+    animation: splash-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  .splash-text {
+    animation: splash-fadeup 0.5s 0.3s both;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .splash-screen {
+      animation: none;
+      display: none;
+    }
   }
 
   .num {
@@ -190,7 +244,7 @@
   }
 
   .safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom, 0);
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 0.875rem);
   }
 
   .grade-pill {

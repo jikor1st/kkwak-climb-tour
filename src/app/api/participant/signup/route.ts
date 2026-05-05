@@ -14,10 +14,9 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json()
-    const { displayName, mainGrade, category, participantType, agreedToTerms } = body
+    const { mainGrade, divisionId, participantType, agreedToTerms } = body
 
-    // 유효성 검사
-    if (!displayName || !mainGrade || !category || !participantType) {
+    if (!mainGrade || !divisionId || !participantType) {
       return NextResponse.json(
         { error: '모든 필드를 입력해주세요' },
         { status: 400 }
@@ -31,9 +30,52 @@ export async function POST(req: Request) {
       )
     }
 
+    if (participantType !== 'crew' && participantType !== 'guest') {
+      return NextResponse.json(
+        { error: '잘못된 참가 유형입니다' },
+        { status: 400 }
+      )
+    }
+
     const supabase = createServerClient()
 
-    // 이미 신청했는지 확인
+    // 회원가입 시 등록한 이름을 그대로 사용. 비어있으면 거부.
+    const { data: me } = await supabase
+      .from('users')
+      .select('nickname')
+      .eq('id', session.user.id)
+      .maybeSingle()
+
+    const nickname = me?.nickname?.trim() ?? ''
+    if (!nickname) {
+      return NextResponse.json(
+        { error: '먼저 회원 이름을 등록해주세요', redirect: '/onboarding/name' },
+        { status: 400 }
+      )
+    }
+
+    const [gradeRes, divisionRes] = await Promise.all([
+      supabase.from('grades').select('id').eq('id', mainGrade).maybeSingle(),
+      supabase
+        .from('divisions')
+        .select('id, active')
+        .eq('id', divisionId)
+        .maybeSingle(),
+    ])
+
+    if (!gradeRes.data) {
+      return NextResponse.json(
+        { error: '잘못된 도전 난이도입니다' },
+        { status: 400 }
+      )
+    }
+    if (!divisionRes.data || !divisionRes.data.active) {
+      return NextResponse.json(
+        { error: '잘못된 참가 부입니다' },
+        { status: 400 }
+      )
+    }
+
     const { data: existing } = await supabase
       .from('participants')
       .select('id')
@@ -47,16 +89,15 @@ export async function POST(req: Request) {
       )
     }
 
-    // 참가자 등록
     const { data, error } = await supabase
       .from('participants')
       .insert({
         user_id: session.user.id,
-        display_name: displayName,
+        display_name: nickname,
         main_grade: mainGrade,
-        category,
+        division_id: divisionId,
         participant_type: participantType,
-        agreed_to_terms: agreedToTerms
+        agreed_to_terms: agreedToTerms,
       })
       .select()
       .single()

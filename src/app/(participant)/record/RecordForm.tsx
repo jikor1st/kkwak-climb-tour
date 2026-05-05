@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useEffect, useMemo, useRef, useState } from "react"
 import type { GymData } from "@/lib/contest/load"
-import type { Category, SolveGrade } from "@/lib/contest/grades"
+import type { DivisionView } from "@/lib/contest/grades"
 import { NumberInputDialog } from "@/components/NumberInputDialog"
 
 type SaveState = "idle" | "saving" | "saved" | "error"
@@ -18,11 +18,10 @@ type Props = {
   participant: {
     id: string
     display_name: string
-    category: Category
     paid: boolean
   }
-  meta: { label: string; solveLabel: string; color: string; bg: string }
-  grade: SolveGrade
+  division: DivisionView
+  grade: string
   gyms: GymData[]
   initialGymId: string | null
   initialTotals: { solved: number; total: number; rate: number }
@@ -32,7 +31,7 @@ type Props = {
 
 export function RecordForm({
   participant,
-  meta,
+  division,
   grade,
   gyms,
   initialGymId,
@@ -148,7 +147,7 @@ export function RecordForm({
   return (
     <div className="pb-32">
       {/* Sticky header */}
-      <div className="sticky top-12 z-30 bg-paper/95 backdrop-blur-md border-b border-line">
+      <div className="sticky top-12 z-30 bg-paper/75 backdrop-blur-xl backdrop-saturate-150 border-b border-line">
         <div className="max-w-3xl mx-auto px-5 py-4">
           <div className="flex items-center justify-between mb-2">
             <div className="text-[10px] text-accent uppercase tracking-[0.2em] font-black">
@@ -168,16 +167,16 @@ export function RecordForm({
             <span
               className="grade-pill"
               style={{
-                color: meta.color,
-                borderColor: meta.color,
-                background: meta.bg,
+                color: division.color,
+                borderColor: division.color,
+                background: division.bg,
               }}
             >
               <span
                 className="grade-dot"
-                style={{ background: meta.color }}
+                style={{ background: division.color }}
               />
-              {meta.label}조 · {meta.solveLabel}
+              {division.label} · {division.solve_grade_label} 풀이
             </span>
           </div>
           <div className="flex items-end justify-between mb-2">
@@ -297,7 +296,7 @@ export function RecordForm({
       <div className="max-w-3xl mx-auto px-5 pt-3">
         <div className="bg-mute rounded-xl px-4 py-3 text-xs text-ink-700 leading-relaxed">
           벽마다 본인이 완등한{" "}
-          <strong className="text-ink-900">{meta.solveLabel}</strong> 갯수를{" "}
+          <strong className="text-ink-900">{division.solve_grade_label} 풀이</strong> 갯수를{" "}
           <strong className="text-ink-900">+ / −</strong> 또는 숫자 탭으로
           기록해주세요. 자동 저장됩니다.
         </div>
@@ -306,7 +305,7 @@ export function RecordForm({
       {/* Walls */}
       <div className="max-w-3xl mx-auto px-5 pt-3 space-y-3">
         <div className="text-xs text-ink-500 font-bold tracking-wider px-1 mt-2">
-          {activeGym?.name}점 · {meta.solveLabel}
+          {activeGym?.name}점 · {division.solve_grade_label} 풀이
         </div>
 
         {!activeGym || activeGym.walls.length === 0 ? (
@@ -321,7 +320,7 @@ export function RecordForm({
               name={w.name}
               total={w.total_count}
               count={counts[w.id] ?? 0}
-              accent={meta.color}
+              accent={division.color}
               disabled={locked}
               onAdjust={adjust}
               onOpenEdit={() => {
@@ -343,7 +342,7 @@ export function RecordForm({
           <NumberInputDialog
             open
             title={`${wall.name} 풀이 갯수`}
-            subtitle={`${meta.solveLabel} · 전체 ${wall.total_count}개`}
+            subtitle={`${division.solve_grade_label} 풀이 · 전체 ${wall.total_count}개`}
             initialValue={counts[wall.id] ?? 0}
             total={wall.total_count}
             onConfirm={(v) => {

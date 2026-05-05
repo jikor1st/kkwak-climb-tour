@@ -1,7 +1,10 @@
 import Link from "next/link"
 import { requireAuth } from "@/lib/auth/guards"
-import { loadRankings, type RankingRow } from "@/lib/contest/ranking"
-import { CATEGORY_META, type Category } from "@/lib/contest/grades"
+import {
+  loadRankings,
+  type RankingRow,
+  type RankingGroupView,
+} from "@/lib/contest/ranking"
 
 export const dynamic = "force-dynamic"
 
@@ -34,20 +37,26 @@ export default async function RankingPage() {
         </div>
       ) : (
         <>
-          <RankingSection
-            title="상급조"
-            subtitle="빨강 풀이 비율 1위 시상"
-            categoryHint="advanced"
-            rows={data.advanced}
-            myParticipantId={myParticipantId}
-          />
-          <RankingSection
-            title="중급·초급 통합"
-            subtitle="두 카테고리 합산 비율 1위 시상"
-            rows={data.midBeginnerCombined}
-            myParticipantId={myParticipantId}
-            mixedCategories
-          />
+          {data.groups.map((group) => (
+            <RankingSection
+              key={group.id}
+              group={group}
+              myParticipantId={myParticipantId}
+            />
+          ))}
+          {data.ungrouped && (
+            <RankingSection
+              group={data.ungrouped}
+              myParticipantId={myParticipantId}
+            />
+          )}
+          {data.groups.length === 0 && !data.ungrouped && (
+            <div className="bg-surface border border-line rounded-3xl p-8 text-center shadow-soft">
+              <p className="text-sm text-ink-700">
+                아직 랭킹 그룹이 없어요. 어드민에서 그룹과 부를 등록해주세요.
+              </p>
+            </div>
+          )}
         </>
       )}
 
@@ -64,44 +73,40 @@ export default async function RankingPage() {
 }
 
 function RankingSection({
-  title,
-  subtitle,
-  rows,
+  group,
   myParticipantId,
-  categoryHint,
-  mixedCategories = false,
 }: {
-  title: string
-  subtitle: string
-  rows: RankingRow[]
+  group: RankingGroupView
   myParticipantId: string | null
-  categoryHint?: Category
-  mixedCategories?: boolean
 }) {
-  const accent = categoryHint ? CATEGORY_META[categoryHint].color : "#0a0a0a"
+  const divisionLabels = group.divisions.map((d) => d.label).join(" · ")
+  const accent = group.divisions[0]?.color ?? "#0a0a0a"
+  const showDivisionTag = group.divisions.length > 1
   return (
     <section className="bg-surface border border-line rounded-3xl p-5 sm:p-6 shadow-soft mb-4">
       <div className="flex items-center justify-between mb-1">
-        <h2 className="text-base font-black">{title}</h2>
+        <h2 className="text-base font-black">{group.name}</h2>
         <span className="text-[10px] font-black text-ink-500 uppercase tracking-wider">
-          {rows.length}명
+          {group.rows.length}명
         </span>
       </div>
-      <p className="text-xs text-ink-500 mb-4">{subtitle}</p>
+      <p className="text-xs text-ink-500 mb-4">
+        {divisionLabels || "참여 부 없음"} · 풀이율 합산 랭킹
+      </p>
 
-      {rows.length === 0 ? (
+      {group.rows.length === 0 ? (
         <div className="bg-mute rounded-xl p-5 text-sm text-ink-700 text-center">
           참가자가 없어요.
         </div>
       ) : (
         <ol className="space-y-1.5">
-          {rows.map((row) => (
+          {group.rows.map((row) => (
             <RankingItem
               key={row.participantId}
               row={row}
               isMine={row.participantId === myParticipantId}
               accent={accent}
-              showCategory={mixedCategories}
+              showDivision={showDivisionTag}
             />
           ))}
         </ol>
@@ -114,15 +119,14 @@ function RankingItem({
   row,
   isMine,
   accent,
-  showCategory,
+  showDivision,
 }: {
   row: RankingRow
   isMine: boolean
   accent: string
-  showCategory: boolean
+  showDivision: boolean
 }) {
   const isTop = row.rank === 1
-  const meta = CATEGORY_META[row.category]
   return (
     <li
       className={`flex items-center gap-3 p-3 rounded-xl border transition ${
@@ -135,9 +139,7 @@ function RankingItem({
     >
       <div
         className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black shrink-0 num ${
-          isTop
-            ? "bg-accent text-white shadow-pop"
-            : "bg-mute text-ink-700"
+          isTop ? "bg-accent text-white shadow-pop" : "bg-mute text-ink-700"
         }`}
         style={isTop ? { background: accent, color: "#fff" } : undefined}
       >
@@ -151,12 +153,12 @@ function RankingItem({
               · 나
             </span>
           )}
-          {showCategory && (
+          {showDivision && (
             <span
               className="text-[10px] font-black px-1.5 py-0.5 rounded-full"
-              style={{ color: meta.color, background: meta.bg }}
+              style={{ color: row.divisionColor, background: row.divisionBg }}
             >
-              {meta.label}
+              {row.divisionLabel}
             </span>
           )}
           {row.participantType === "guest" && (

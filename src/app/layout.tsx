@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthSessionProvider } from "@/lib/auth/session-provider";
+import { SplashScreen } from "@/components/SplashScreen";
 
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ??
@@ -8,9 +9,9 @@ const SITE_URL =
     ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
     : "https://kkwak-climb-tour.vercel.app");
 
-const SITE_NAME = "꽉크루 클라이밍 투어 2026";
+const SITE_NAME = "꽉크루 볼구력 대회 2026";
 const SITE_DESC =
-  "강남 6개 지점, 하루 안에 정주행. 평소보다 살짝 쉬운 색을 정한 시간 안에 누가 더 많이 풀까?";
+  "강남 6개 암장, 단 하루. 각자의 색으로 정해진 시간 동안 풀어낸 만큼이 곧 결과.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -22,12 +23,14 @@ export const metadata: Metadata = {
   applicationName: SITE_NAME,
   keywords: [
     "꽉크루",
+    "볼구력",
+    "볼구력 대회",
+    "볼더링",
     "클라이밍",
     "더클라임",
     "더클",
     "강남 클라이밍",
     "클라이밍 대회",
-    "클라이밍 투어",
     "2026",
   ],
   authors: [{ name: "꽉크루" }],
@@ -47,9 +50,6 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
-  },
-  icons: {
-    icon: "/favicon.ico",
   },
 };
 
@@ -78,6 +78,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full">
+        <SplashScreen />
         <AuthSessionProvider>{children}</AuthSessionProvider>
       </body>
     </html>

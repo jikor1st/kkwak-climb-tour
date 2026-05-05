@@ -12,7 +12,7 @@ export default async function AdminLayout({
 
   return (
     <div className="min-h-screen bg-paper">
-      <header className="sticky top-0 z-40 bg-paper/95 backdrop-blur-md border-b border-line">
+      <header className="sticky top-0 z-40 bg-paper/75 backdrop-blur-xl backdrop-saturate-150 border-b border-line">
         <div className="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 shrink-0">
             <Link href="/admin" className="flex items-center gap-1.5 group">
@@ -23,8 +23,10 @@ export default async function AdminLayout({
             <ModeToggle current="admin" />
           </div>
           <nav className="flex items-center gap-1 overflow-x-auto no-scrollbar flex-1 justify-end">
+            <NavLink href="/admin/difficulty">난이도</NavLink>
             <NavLink href="/admin/walls">벽·문제수</NavLink>
             <NavLink href="/admin/participants">참가자</NavLink>
+            <NavLink href="/admin/users">회원</NavLink>
             <NavLink href="/admin/schedule">일정</NavLink>
             <NavLink href="/admin/notice">안내문구</NavLink>
             <Link
@@ -32,6 +34,12 @@ export default async function AdminLayout({
               className="text-xs text-ink-500 hover:text-ink-900 transition font-bold ml-2 shrink-0 whitespace-nowrap"
             >
               메인
+            </Link>
+            <Link
+              href="/me"
+              className="text-xs text-ink-500 hover:text-ink-900 transition font-bold ml-2 shrink-0 whitespace-nowrap"
+            >
+              내 계정
             </Link>
             <form
               action={async () => {

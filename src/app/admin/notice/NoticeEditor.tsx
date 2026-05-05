@@ -115,7 +115,7 @@ export function NoticeEditor({ initialNotice }: { initialNotice: string }) {
       </div>
 
       {toast && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-ink-900 text-white text-sm font-bold px-4 py-3 rounded-2xl shadow-pop">
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-ink-900/85 backdrop-blur-md backdrop-saturate-150 text-white text-sm font-bold px-4 py-3 rounded-2xl shadow-pop">
           {toast}
         </div>
       )}

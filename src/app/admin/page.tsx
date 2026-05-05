@@ -63,10 +63,16 @@ export default async function AdminHome() {
 
       <div className="grid sm:grid-cols-2 gap-4">
         <AdminCard
+          href="/admin/difficulty"
+          eyebrow="STEP 0"
+          title="난이도 · 부 · 랭킹 그룹"
+          desc="색·참가 부·랭킹 그룹·도전 난이도→추천 부 매핑을 관리합니다."
+        />
+        <AdminCard
           href="/admin/walls"
           eyebrow="STEP 1"
           title="벽 · 문제 수 등록"
-          desc="6개 지점의 벽과 빨강·파랑·초록 등급별 문제 수를 입력합니다."
+          desc="6개 암장의 벽과 색별 문제 수를 입력합니다."
           required={wallCount === 0 || totalProblems === 0}
         />
         <AdminCard
@@ -75,6 +81,12 @@ export default async function AdminHome() {
           title="참가자 · 입금 확인"
           desc="신청자 목록을 확인하고 입금 완료를 표시합니다."
           required={participantCount > paidCount}
+        />
+        <AdminCard
+          href="/admin/users"
+          eyebrow="권한"
+          title="회원 · 권한 관리"
+          desc="가입한 모든 카카오 회원에게 어드민 권한을 부여·해제합니다."
         />
         <AdminCard
           href="/admin/schedule"

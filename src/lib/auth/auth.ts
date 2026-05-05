@@ -61,10 +61,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         session.user.id = user.id
         session.user.role = user.role
+        // DB nickname을 session.user.name으로 노출 (카카오 oauth name 대체)
+        if (user.nickname) {
+          session.user.name = user.nickname
+        }
 
         const { data: participants, error: pError } = await supabase
           .from('participants')
-          .select('id, display_name, main_grade, category, participant_type, paid')
+          .select('id, display_name, main_grade, division_id, participant_type, paid')
           .eq('user_id', user.id)
           .limit(1)
 
@@ -105,8 +109,8 @@ declare module "next-auth" {
       participant: {
         id: string
         display_name: string
-        main_grade: 'purple' | 'pink' | 'red' | 'blue'
-        category: 'advanced' | 'intermediate' | 'beginner'
+        main_grade: string
+        division_id: string
         participant_type: 'crew' | 'guest'
         paid: boolean
         teams?: {

@@ -1,56 +1,120 @@
-export const CATEGORY_TO_GRADE = {
-  advanced: "red",
-  intermediate: "blue",
-  beginner: "green",
-} as const
+import { createServerClient } from "@/lib/supabase/server"
 
-export type Category = keyof typeof CATEGORY_TO_GRADE
-export type SolveGrade = (typeof CATEGORY_TO_GRADE)[Category]
-
-export const CATEGORY_META: Record<
-  Category,
-  { label: string; solveLabel: string; color: string; bg: string }
-> = {
-  advanced: {
-    label: "상급",
-    solveLabel: "빨강 풀이",
-    color: "#DC2626",
-    bg: "#FEF2F2",
-  },
-  intermediate: {
-    label: "중급",
-    solveLabel: "파랑 풀이",
-    color: "#2563EB",
-    bg: "#EFF6FF",
-  },
-  beginner: {
-    label: "초급",
-    solveLabel: "초록 풀이",
-    color: "#16A34A",
-    bg: "#F0FDF4",
-  },
+export type Grade = {
+  id: string
+  label: string
+  color_hex: string
+  sort_order: number
 }
 
-export const GRADE_LABEL: Record<string, string> = {
-  purple: "보라",
-  pink: "핑크",
-  red: "빨강",
-  blue: "파랑",
-  green: "초록",
-  yellow: "노랑",
-  orange: "주황",
-  white: "흰색",
-  gray: "회색",
+export type RankingGroup = {
+  id: string
+  name: string
+  sort_order: number
 }
 
-export const GRADE_COLOR: Record<string, string> = {
-  purple: "#9333EA",
-  pink: "#DB2777",
-  red: "#DC2626",
-  blue: "#2563EB",
-  green: "#16A34A",
-  yellow: "#EAB308",
-  orange: "#EA580C",
-  white: "#FFFFFF",
-  gray: "#6B7280",
+export type Division = {
+  id: string
+  label: string
+  solve_grade: string
+  ranking_group_id: string | null
+  sort_order: number
+  desc_text: string
+  active: boolean
+}
+
+export type DivisionRecommendation = {
+  challenge_grade: string
+  division_id: string
+}
+
+export type DifficultySystem = {
+  grades: Grade[]
+  gradesById: Record<string, Grade>
+  divisions: Division[]
+  divisionsById: Record<string, Division>
+  rankingGroups: RankingGroup[]
+  rankingGroupsById: Record<string, RankingGroup>
+  recommendations: DivisionRecommendation[]
+}
+
+export async function loadDifficultySystem(): Promise<DifficultySystem> {
+  const supabase = createServerClient()
+
+  const [gRes, dRes, rgRes, recRes] = await Promise.all([
+    supabase
+      .from("grades")
+      .select("id, label, color_hex, sort_order")
+      .order("sort_order"),
+    supabase
+      .from("divisions")
+      .select(
+        "id, label, solve_grade, ranking_group_id, sort_order, desc_text, active",
+      )
+      .order("sort_order"),
+    supabase
+      .from("ranking_groups")
+      .select("id, name, sort_order")
+      .order("sort_order"),
+    supabase
+      .from("division_recommendations")
+      .select("challenge_grade, division_id"),
+  ])
+
+  const grades = (gRes.data ?? []) as Grade[]
+  const divisions = (dRes.data ?? []) as Division[]
+  const rankingGroups = (rgRes.data ?? []) as RankingGroup[]
+  const recommendations = (recRes.data ?? []) as DivisionRecommendation[]
+
+  return {
+    grades,
+    gradesById: Object.fromEntries(grades.map((g) => [g.id, g])),
+    divisions,
+    divisionsById: Object.fromEntries(divisions.map((d) => [d.id, d])),
+    rankingGroups,
+    rankingGroupsById: Object.fromEntries(rankingGroups.map((r) => [r.id, r])),
+    recommendations,
+  }
+}
+
+export type DivisionView = {
+  id: string
+  label: string
+  desc_text: string
+  solve_grade: string
+  solve_grade_label: string
+  color: string
+  bg: string
+  ranking_group_id: string | null
+}
+
+const DEFAULT_BG = "#F4F4F4"
+
+function softBg(hex: string): string {
+  const h = hex.replace("#", "")
+  if (h.length !== 6) return DEFAULT_BG
+  return `#${h}1A`
+}
+
+export function buildDivisionView(d: Division, g?: Grade): DivisionView {
+  const color = g?.color_hex ?? "#6B7280"
+  return {
+    id: d.id,
+    label: d.label,
+    desc_text: d.desc_text,
+    solve_grade: d.solve_grade,
+    solve_grade_label: g?.label ?? d.solve_grade,
+    color,
+    bg: softBg(color),
+    ranking_group_id: d.ranking_group_id,
+  }
+}
+
+export function divisionView(
+  divisionId: string,
+  system: Pick<DifficultySystem, "divisionsById" | "gradesById">,
+): DivisionView | null {
+  const d = system.divisionsById[divisionId]
+  if (!d) return null
+  return buildDivisionView(d, system.gradesById[d.solve_grade])
 }

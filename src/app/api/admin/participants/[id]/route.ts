@@ -2,8 +2,6 @@ import { requireAdmin } from "@/lib/auth/guards"
 import { createServerClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
-const CATEGORIES = new Set(["advanced", "intermediate", "beginner"])
-const GRADES = new Set(["purple", "pink", "red", "blue"])
 const TYPES = new Set(["crew", "guest"])
 
 export async function PATCH(
@@ -14,14 +12,34 @@ export async function PATCH(
   const { id } = await params
   const body = await req.json()
   const update: Record<string, unknown> = {}
+  const supabase = createServerClient()
 
   if (typeof body.paid === "boolean") update.paid = body.paid
-  if (typeof body.category === "string" && CATEGORIES.has(body.category)) {
-    update.category = body.category
+
+  if (typeof body.division_id === "string") {
+    const { data } = await supabase
+      .from("divisions")
+      .select("id")
+      .eq("id", body.division_id)
+      .maybeSingle()
+    if (!data) {
+      return NextResponse.json({ error: "잘못된 참가 부입니다" }, { status: 400 })
+    }
+    update.division_id = body.division_id
   }
-  if (typeof body.main_grade === "string" && GRADES.has(body.main_grade)) {
+
+  if (typeof body.main_grade === "string") {
+    const { data } = await supabase
+      .from("grades")
+      .select("id")
+      .eq("id", body.main_grade)
+      .maybeSingle()
+    if (!data) {
+      return NextResponse.json({ error: "잘못된 도전 난이도입니다" }, { status: 400 })
+    }
     update.main_grade = body.main_grade
   }
+
   if (typeof body.participant_type === "string" && TYPES.has(body.participant_type)) {
     update.participant_type = body.participant_type
   }
@@ -40,7 +58,6 @@ export async function PATCH(
     return NextResponse.json({ error: "변경할 필드가 없어요" }, { status: 400 })
   }
 
-  const supabase = createServerClient()
   const { data, error } = await supabase
     .from("participants")
     .update(update)

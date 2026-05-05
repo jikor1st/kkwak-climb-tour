@@ -2,8 +2,6 @@ import { requireAdmin } from "@/lib/auth/guards"
 import { createServerClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
-const ALLOWED_GRADES = new Set(["red", "blue", "green"])
-
 export async function POST(req: Request) {
   await requireAdmin()
   const body = await req.json()
@@ -13,18 +11,27 @@ export async function POST(req: Request) {
     total_count?: number
   }
 
-  if (
-    !wall_id ||
-    !grade ||
-    !ALLOWED_GRADES.has(grade) ||
-    typeof total_count !== "number"
-  ) {
+  if (!wall_id || !grade || typeof total_count !== "number") {
     return NextResponse.json({ error: "잘못된 요청" }, { status: 400 })
+  }
+
+  const supabase = createServerClient()
+
+  const { data: gradeRow } = await supabase
+    .from("grades")
+    .select("id")
+    .eq("id", grade)
+    .maybeSingle()
+
+  if (!gradeRow) {
+    return NextResponse.json(
+      { error: "등록되지 않은 색입니다" },
+      { status: 400 },
+    )
   }
 
   const value = Math.max(0, Math.min(Math.floor(total_count), 999))
 
-  const supabase = createServerClient()
   const { error } = await supabase.from("grade_counts").upsert(
     {
       wall_id,

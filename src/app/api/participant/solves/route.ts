@@ -3,12 +3,6 @@ import { createServerClient } from "@/lib/supabase/server"
 import { isContestOpen } from "@/lib/contest/timeline-now"
 import { NextResponse } from "next/server"
 
-const CATEGORY_TO_GRADE: Record<string, string> = {
-  advanced: "red",
-  intermediate: "blue",
-  beginner: "green",
-}
-
 export async function POST(req: Request) {
   try {
     const session = await auth()
@@ -42,15 +36,27 @@ export async function POST(req: Request) {
       )
     }
 
-    const expectedGrade = CATEGORY_TO_GRADE[participant.category]
-    if (grade !== expectedGrade) {
+    const supabase = createServerClient()
+
+    const { data: division, error: divError } = await supabase
+      .from("divisions")
+      .select("solve_grade")
+      .eq("id", participant.division_id)
+      .maybeSingle()
+
+    if (divError || !division) {
       return NextResponse.json(
-        { error: "본인 카테고리에 해당하는 색만 기록할 수 있습니다" },
-        { status: 403 },
+        { error: "참가 부 정보를 찾을 수 없습니다" },
+        { status: 500 },
       )
     }
 
-    const supabase = createServerClient()
+    if (grade !== division.solve_grade) {
+      return NextResponse.json(
+        { error: "본인 부에 해당하는 색만 기록할 수 있습니다" },
+        { status: 403 },
+      )
+    }
 
     const { data: settings } = await supabase
       .from("contest_settings")
