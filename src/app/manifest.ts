@@ -13,25 +13,40 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: SHORT_NAME,
     description: SITE_DESC,
     lang: "ko",
-    start_url: "/dashboard",
+    // 비로그인 상태에서도 200을 응답하는 루트로 둠. start_url이 인증 리다이렉트를
+    // 거치면 일부 환경에서 설치 가능 신호가 흔들릴 수 있어 안전한 '/'로.
+    start_url: "/",
     scope: "/",
     display: "standalone",
     orientation: "portrait",
     background_color: "#FAFAF7",
     theme_color: "#DC2626",
     categories: ["sports", "lifestyle"],
+    // Chrome 설치 가능 판정에는 192/512 PNG 두 사이즈가 모두 필요 — SVG만 있으면 X.
     icons: [
       {
-        src: "/icon.svg",
-        sizes: "any",
-        type: "image/svg+xml",
+        src: "/icon-192.png",
+        sizes: "192x192",
+        type: "image/png",
         purpose: "any",
       },
       {
-        src: "/kakao-app-icon.png",
+        src: "/icon-512.png",
         sizes: "512x512",
         type: "image/png",
         purpose: "any",
+      },
+      {
+        src: "/icon-192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "maskable",
+      },
+      {
+        src: "/icon-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
       },
     ],
   }

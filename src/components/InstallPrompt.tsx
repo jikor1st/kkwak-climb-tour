@@ -56,12 +56,27 @@ export function InstallPrompt() {
       }
     }
 
-    const onBefore = (e: Event) => {
-      e.preventDefault()
-      setDeferredPrompt(e as BeforeInstallPromptEvent)
+    const adopt = (e: BeforeInstallPromptEvent) => {
+      setDeferredPrompt(e)
       setPlatform("chrome")
       if (timer) clearTimeout(timer)
       timer = setTimeout(() => setShow(true), SHOW_AFTER_MS)
+    }
+
+    // 마운트 전에 이미 발화돼 layout의 inline 스크립트가 stash 해둔 이벤트가 있으면 즉시 사용.
+    type PWAStashWindow = Window & {
+      __deferredInstallPrompt?: BeforeInstallPromptEvent | null
+    }
+    const stashed = (window as PWAStashWindow).__deferredInstallPrompt
+    if (stashed) adopt(stashed)
+
+    const onBefore = (e: Event) => {
+      e.preventDefault()
+      adopt(e as BeforeInstallPromptEvent)
+    }
+    const onStashReady = () => {
+      const s = (window as PWAStashWindow).__deferredInstallPrompt
+      if (s) adopt(s)
     }
 
     const onInstalled = () => {
@@ -75,9 +90,11 @@ export function InstallPrompt() {
     }
 
     window.addEventListener("beforeinstallprompt", onBefore)
+    window.addEventListener("__pwaPromptReady", onStashReady)
     window.addEventListener("appinstalled", onInstalled)
     return () => {
       window.removeEventListener("beforeinstallprompt", onBefore)
+      window.removeEventListener("__pwaPromptReady", onStashReady)
       window.removeEventListener("appinstalled", onInstalled)
       if (timer) clearTimeout(timer)
     }

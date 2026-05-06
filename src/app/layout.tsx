@@ -107,6 +107,14 @@ export default function RootLayout({
               "try{if(sessionStorage.getItem('splash-seen')){document.documentElement.classList.add('splash-seen')}else{sessionStorage.setItem('splash-seen','1')}}catch(e){}",
           }}
         />
+        {/* PWA 설치 이벤트는 React 마운트 전에 한 번만 발화될 수 있어, 가능한 한 일찍
+            window에 stash 해두고 InstallPrompt가 마운트 후 꺼내쓰게 한다. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__deferredInstallPrompt=e;window.dispatchEvent(new Event('__pwaPromptReady'))});window.addEventListener('appinstalled',function(){window.__deferredInstallPrompt=null});",
+          }}
+        />
       </head>
       <body className="min-h-full">
         <SplashScreen />
