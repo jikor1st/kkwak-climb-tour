@@ -35,7 +35,6 @@ export async function PATCH(req: Request) {
     settings?: {
       contest_date?: string | null
       start_time?: string | null
-      end_time?: string | null
       lunch_start_time?: string | null
       lunch_minutes?: number
       default_gym_minutes?: number
@@ -47,13 +46,11 @@ export async function PATCH(req: Request) {
   if (body.settings) {
     const date = normalizeDate(body.settings.contest_date)
     const start = normalizeTime(body.settings.start_time)
-    const end = normalizeTime(body.settings.end_time)
     const lunchStart = normalizeTime(body.settings.lunch_start_time)
     const lunchMin = normalizeMinutes(body.settings.lunch_minutes)
     const defaultMin = normalizeMinutes(body.settings.default_gym_minutes)
     if (date !== undefined && date !== null) updates.contest_date = date
     if (start !== undefined) updates.start_time = start
-    if (end !== undefined) updates.end_time = end
     if (lunchStart !== undefined) updates.lunch_start_time = lunchStart
     if (lunchMin !== undefined) updates.lunch_minutes = lunchMin
     if (defaultMin !== undefined) updates.default_gym_minutes = defaultMin

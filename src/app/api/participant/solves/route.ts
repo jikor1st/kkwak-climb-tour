@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth/auth"
 import { createServerClient } from "@/lib/supabase/server"
 import { isContestOpen } from "@/lib/contest/timeline-now"
+import { buildTimeline } from "@/lib/contest/schedule"
 import { NextResponse } from "next/server"
 
 export async function POST(req: Request) {
@@ -58,17 +59,62 @@ export async function POST(req: Request) {
       )
     }
 
-    const { data: settings } = await supabase
-      .from("contest_settings")
-      .select("contest_date, start_time, end_time")
-      .eq("id", 1)
-      .maybeSingle()
+    const [settingsRes, gymsRes, durRes, breaksRes] = await Promise.all([
+      supabase
+        .from("contest_settings")
+        .select(
+          "contest_date, start_time, default_gym_minutes, lunch_minutes, lunch_start_time",
+        )
+        .eq("id", 1)
+        .maybeSingle(),
+      supabase
+        .from("gyms")
+        .select("id, name, display_order")
+        .eq("active", true)
+        .order("display_order"),
+      supabase.from("gym_durations").select("gym_id, duration_minutes"),
+      supabase
+        .from("schedule_breaks")
+        .select("id, name, duration_minutes, after_gym_id, display_order")
+        .order("display_order"),
+    ])
+    const settings = settingsRes.data
+    const defaultMinutes = settings?.default_gym_minutes ?? 45
+    const durMap = new Map(
+      (durRes.data ?? []).map((d) => [d.gym_id, d.duration_minutes]),
+    )
+    const timelineGyms = (gymsRes.data ?? []).map((g) => ({
+      id: g.id,
+      name: g.name,
+      display_order: g.display_order,
+      duration_minutes: durMap.get(g.id) ?? defaultMinutes,
+    }))
+    const breaks = (breaksRes.data ?? []).map((b) => ({
+      id: b.id,
+      name: b.name,
+      duration_minutes: b.duration_minutes,
+      after_gym_id: b.after_gym_id ?? null,
+      display_order: b.display_order ?? 0,
+    }))
+    const timeline = buildTimeline(
+      {
+        start_time: settings?.start_time ?? null,
+        default_gym_minutes: defaultMinutes,
+        lunch_minutes: settings?.lunch_minutes ?? 60,
+        lunch_start_time: settings?.lunch_start_time ?? null,
+        contest_date: settings?.contest_date ?? null,
+      },
+      timelineGyms,
+      breaks,
+    )
 
-    const window = isContestOpen({
-      contest_date: settings?.contest_date ?? null,
-      start_time: settings?.start_time ?? null,
-      end_time: settings?.end_time ?? null,
-    })
+    const window = isContestOpen(
+      {
+        contest_date: settings?.contest_date ?? null,
+        start_time: settings?.start_time ?? null,
+      },
+      timeline.endLabel,
+    )
 
     if (!window.open) {
       return NextResponse.json(

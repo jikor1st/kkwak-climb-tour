@@ -1,6 +1,5 @@
 export type ScheduleSettings = {
   start_time: string | null
-  end_time: string | null
   default_gym_minutes: number
   lunch_minutes: number
   lunch_start_time: string | null
@@ -45,7 +44,6 @@ export type TimelineStop = TimelineGymStop | TimelineBreakStop
 export type Timeline = {
   startLabel: string | null
   endLabel: string | null
-  computedEndLabel: string | null
   stops: TimelineStop[]
   hasStartTime: boolean
 }
@@ -74,16 +72,13 @@ export function buildTimeline(
   breaks: ScheduleBreak[] = [],
 ): Timeline {
   const startMin = toMinutes(settings.start_time)
-  const endMin = toMinutes(settings.end_time)
 
   const startLabel = startMin != null ? fromMinutes(startMin) : null
-  const endLabel = endMin != null ? fromMinutes(endMin) : null
 
   if (startMin == null) {
     return {
       startLabel,
-      endLabel,
-      computedEndLabel: null,
+      endLabel: null,
       stops: [],
       hasStartTime: false,
     }
@@ -142,8 +137,7 @@ export function buildTimeline(
 
   return {
     startLabel,
-    endLabel,
-    computedEndLabel: fromMinutes(cursor),
+    endLabel: fromMinutes(cursor),
     stops,
     hasStartTime: true,
   }

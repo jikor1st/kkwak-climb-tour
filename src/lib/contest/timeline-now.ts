@@ -104,7 +104,7 @@ export function computeCurrentStatus(
 
   return {
     kind: "after",
-    endLabel: timeline.endLabel ?? timeline.computedEndLabel,
+    endLabel: timeline.endLabel,
   }
 }
 
@@ -187,7 +187,7 @@ export function computeCurrentStatusSec(
 
   return {
     kind: "after",
-    endLabel: timeline.endLabel ?? timeline.computedEndLabel,
+    endLabel: timeline.endLabel,
   }
 }
 
@@ -207,11 +207,11 @@ export type ContestWindow = {
 type WindowSettings = {
   contest_date: string | null
   start_time: string | null
-  end_time: string | null
 }
 
 export function isContestOpen(
   settings: WindowSettings,
+  endLabel: string | null,
   now: Date = new Date(),
 ): ContestWindow {
   if (!settings.contest_date) {
@@ -243,10 +243,9 @@ export function isContestOpen(
     }
   }
 
-  if (settings.end_time) {
+  if (endLabel) {
     const endMin =
-      Number(settings.end_time.slice(0, 2)) * 60 +
-      Number(settings.end_time.slice(3, 5))
+      Number(endLabel.slice(0, 2)) * 60 + Number(endLabel.slice(3, 5))
     if (nowMin >= endMin) {
       return { open: false, reason: "대회가 종료되었어요" }
     }

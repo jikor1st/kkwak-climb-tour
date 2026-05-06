@@ -100,6 +100,12 @@ export default async function AdminHome() {
       />
       <div className="grid sm:grid-cols-2 gap-4">
         <AdminCard
+          href="/admin/announcement"
+          eyebrow="공지"
+          title="참가자 상단 공지"
+          desc="모든 참가자 화면 상단에 sticky 배너로 노출됩니다. 대회 당일·전날엔 닫기가 막혀 모두가 봐야 해요."
+        />
+        <AdminCard
           href="/admin/participants"
           eyebrow="참가자"
           title="참가자 · 입금 확인"

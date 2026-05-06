@@ -71,8 +71,7 @@ export function CurrentScheduleStatus({ timeline, contestDate }: Props) {
             </div>
           </div>
           <div className="text-xs text-ink-500 num">
-            {timeline.startLabel}~
-            {timeline.endLabel ?? timeline.computedEndLabel}
+            {timeline.startLabel}~{timeline.endLabel}
           </div>
         </div>
       </Wrap>
@@ -237,9 +236,12 @@ function Wrap({
   kind: "active" | "break" | "info" | "muted"
   children: React.ReactNode
 }) {
+  // 활성 상태: brand red(#dc2626)는 유지하되 평면적 단색이 눈을 피로하게 해서
+  // top-left → bottom-right로 살짝만 깊어지는 그라디언트로 변경. 시선이 닿는
+  // 윗부분은 원래 brand red 그대로, 하단만 살짝 그늘져 평면감을 흩는다.
   const cls =
     kind === "active"
-      ? "bg-accent text-white shadow-pop border-transparent"
+      ? "bg-[linear-gradient(135deg,#dc2626_0%,#b91c1c_100%)] text-white shadow-pop border-transparent"
       : kind === "break"
         ? "bg-ink-900 text-white shadow-pop border-transparent"
         : kind === "info"

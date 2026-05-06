@@ -19,16 +19,13 @@ export function CountUpNumber({ value, durationMs = 900, className }: Props) {
     if (target === start) return
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    if (reduce) {
-      setDisplay(target)
-      return
-    }
+    const duration = reduce ? 0 : durationMs
 
     startTsRef.current = null
     const tick = (ts: number) => {
       if (startTsRef.current == null) startTsRef.current = ts
       const elapsed = ts - startTsRef.current
-      const t = Math.min(1, elapsed / durationMs)
+      const t = duration === 0 ? 1 : Math.min(1, elapsed / duration)
       const eased = 1 - Math.pow(1 - t, 3) // easeOutCubic
       const current = Math.round(start + (target - start) * eased)
       setDisplay(current)

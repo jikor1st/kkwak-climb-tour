@@ -70,7 +70,7 @@ export function TimelineList({
     ? computeCurrentStatus(timeline, now.min)
     : { kind: "no-schedule" as const }
   const activeIndex = status.kind === "active" ? status.stopIndex : -1
-  const endLabel = timeline.endLabel ?? timeline.computedEndLabel
+  const endLabel = timeline.endLabel
 
   return (
     <ol className="space-y-1">
@@ -86,9 +86,9 @@ export function TimelineList({
           return (
             <li
               key={key}
-              className={`flex items-center gap-3 px-3 py-1.5 ${fade}`}
+              className={`flex items-center gap-2 sm:gap-3 px-3 py-1.5 ${fade}`}
             >
-              <div className="w-14 shrink-0 flex flex-col leading-tight text-ink-500">
+              <div className="w-12 sm:w-14 shrink-0 flex flex-col leading-tight text-ink-500">
                 <span className="text-[10px] font-black uppercase tracking-wider num">
                   {stop.start}
                 </span>
@@ -97,15 +97,15 @@ export function TimelineList({
                 </span>
               </div>
               <span
-                className="w-7 shrink-0 text-center text-ink-300 text-xs"
+                className="w-5 sm:w-7 shrink-0 text-center text-ink-300 text-xs"
                 aria-hidden
               >
                 ↓
               </span>
-              <span className="flex-1 truncate text-xs font-bold text-ink-700">
+              <span className="flex-1 min-w-0 wrap-break-word text-[11px] sm:text-xs font-bold text-ink-700 leading-snug">
                 {stop.name}
               </span>
-              <span className="text-xs num font-bold shrink-0 text-ink-500">
+              <span className="text-[11px] sm:text-xs num font-bold shrink-0 text-ink-500">
                 {stop.durationMinutes}분
               </span>
             </li>
@@ -126,10 +126,10 @@ export function TimelineList({
         return (
           <li
             key={key}
-            className={`flex items-center gap-3 p-3 rounded-xl border transition ${cardCls}`}
+            className={`flex items-center gap-2 sm:gap-3 p-3 rounded-xl border transition ${cardCls}`}
           >
             <div
-              className={`w-14 shrink-0 flex flex-col leading-tight ${timeColor}`}
+              className={`w-12 sm:w-14 shrink-0 flex flex-col leading-tight ${timeColor}`}
             >
               <span className="text-[10px] font-black uppercase tracking-wider num">
                 {stop.start}
@@ -140,23 +140,23 @@ export function TimelineList({
             </div>
             {isGym ? (
               <div
-                className={`w-7 h-7 rounded-lg shrink-0 flex items-center justify-center ${iconBadgeCls}`}
+                className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg shrink-0 flex items-center justify-center ${iconBadgeCls}`}
                 aria-hidden="true"
               >
-                <GymIcon className="w-4 h-4" />
+                <GymIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
             ) : (
-              <div className="w-7 shrink-0" aria-hidden="true" />
+              <div className="w-6 sm:w-7 shrink-0" aria-hidden="true" />
             )}
-            <div className={`flex-1 font-black text-sm min-w-0 ${labelColor}`}>
-              <span className="truncate">{stop.name}</span>
+            <div className={`flex-1 font-black text-[13px] sm:text-sm min-w-0 leading-snug ${labelColor}`}>
+              <span className="wrap-break-word">{stop.name}</span>
               {isActive && (
-                <span className="ml-1.5 text-[10px] font-black uppercase opacity-90">
+                <span className="ml-1.5 text-[10px] font-black uppercase opacity-90 whitespace-nowrap">
                   · 진행 중
                 </span>
               )}
             </div>
-            <div className={`text-xs num font-bold ${durColor}`}>
+            <div className={`text-[11px] sm:text-xs num font-bold shrink-0 ${durColor}`}>
               {stop.durationMinutes}분
             </div>
           </li>
@@ -171,6 +171,10 @@ export function TimelineList({
           <div className="flex-1 font-black text-sm">종료</div>
         </li>
       )}
+      <li className="mt-3 px-3 py-2.5 bg-mute/60 rounded-lg text-[11px] text-ink-700 leading-relaxed">
+        <strong className="text-ink-900">이동 방식(지하철 노선·도보 등)은 참고용</strong>이에요.
+        편한 경로로 시간만 맞춰 이동해주세요.
+      </li>
     </ol>
   )
 }

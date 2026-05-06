@@ -119,7 +119,6 @@ function RankingSection({
   myParticipantId: string | null
 }) {
   const divisionLabels = group.divisions.map((d) => d.label).join(" · ")
-  const accent = group.divisions[0]?.color ?? "#0a0a0a"
   const showDivisionTag = group.divisions.length > 1
   const isUngrouped = group.id === "__ungrouped__"
   return (
@@ -155,7 +154,6 @@ function RankingSection({
               key={row.participantId}
               row={row}
               isMine={row.participantId === myParticipantId}
-              accent={accent}
               showDivision={showDivisionTag}
             />
           ))}
@@ -168,15 +166,15 @@ function RankingSection({
 function RankingItem({
   row,
   isMine,
-  accent,
   showDivision,
 }: {
   row: RankingRow
   isMine: boolean
-  accent: string
   showDivision: boolean
 }) {
   const isTop = row.rank === 1
+  // 번호 배지 = 참가자 본인의 부 색상. 한 그룹 안에 여러 부가 섞여있어
+  // 그룹 단일 색을 쓰면 시각적으로 어긋남. 1등은 색 대신 ring + shadow로 분리.
   return (
     <li
       className={`flex items-center gap-3 p-3 rounded-xl border transition ${
@@ -188,10 +186,11 @@ function RankingItem({
       }`}
     >
       <div
-        className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black shrink-0 num ${
-          isTop ? "bg-accent text-white shadow-pop" : "bg-mute text-ink-700"
+        className={`w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black shrink-0 num text-white ${
+          isTop ? "ring-2 ring-offset-2 ring-accent shadow-pop" : ""
         }`}
-        style={isTop ? { background: accent, color: "#fff" } : undefined}
+        style={{ background: row.divisionColor }}
+        aria-label={isTop ? `${row.rank}위 (1등)` : `${row.rank}위`}
       >
         {row.rank}
       </div>

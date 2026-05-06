@@ -459,6 +459,7 @@ export function DifficultyEditor({
         }
       >
         <DndContext
+          id="difficulty-grades"
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={handleGradeDragEnd}
@@ -509,6 +510,7 @@ export function DifficultyEditor({
         }
       >
         <DndContext
+          id="difficulty-divisions"
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={handleDivisionDragEnd}
@@ -852,18 +854,23 @@ function GradeEditDialog({
   onClose: () => void
   onSubmit: (patch: Partial<Grade>) => Promise<void>
 }) {
-  const [label, setLabel] = useState("")
-  const [color, setColor] = useState("#888888")
+  if (!grade) return null
+  return <GradeEditBody grade={grade} onClose={onClose} onSubmit={onSubmit} />
+}
+
+function GradeEditBody({
+  grade,
+  onClose,
+  onSubmit,
+}: {
+  grade: Grade
+  onClose: () => void
+  onSubmit: (patch: Partial<Grade>) => Promise<void>
+}) {
+  const [label, setLabel] = useState(grade.label)
+  const [color, setColor] = useState(grade.color_hex)
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    if (grade) {
-      setLabel(grade.label)
-      setColor(grade.color_hex)
-    }
-  }, [grade])
-
-  if (!grade) return null
   const ok = !!(label.trim() && HEX_RE.test(color.trim()))
   const dirty = label.trim() !== grade.label || color.trim() !== grade.color_hex
 
@@ -926,13 +933,7 @@ function GradeEditDialog({
   )
 }
 
-function DivisionFormDialog({
-  open,
-  grades,
-  groups,
-  onClose,
-  onSubmit,
-}: {
+type DivisionFormProps = {
   open: boolean
   grades: Grade[]
   groups: RankingGroup[]
@@ -943,27 +944,29 @@ function DivisionFormDialog({
     ranking_group_id: string | null
     desc_text: string
   }) => Promise<void>
-}) {
+}
+
+function DivisionFormDialog(props: DivisionFormProps) {
+  if (!props.open) return null
+  return <DivisionFormBody {...props} />
+}
+
+function DivisionFormBody({
+  grades,
+  groups,
+  onClose,
+  onSubmit,
+}: Omit<DivisionFormProps, "open">) {
   const [label, setLabel] = useState("")
   const [solveGrade, setSolveGrade] = useState<string>(grades[0]?.id ?? "")
   const [groupId, setGroupId] = useState<string>("")
   const [desc, setDesc] = useState("")
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    if (open) {
-      setLabel("")
-      setSolveGrade(grades[0]?.id ?? "")
-      setGroupId("")
-      setDesc("")
-    }
-  }, [open, grades])
-
-  if (!open) return null
   const ok = !!(label.trim() && solveGrade)
 
   return (
-    <Modal open={open} onClose={onClose} ariaLabel="새 부 추가">
+    <Modal open onClose={onClose} ariaLabel="새 부 추가">
       <h2 className="text-lg font-black mb-4">새 부 추가</h2>
       <Field label="이름">
         <input
@@ -1044,35 +1047,31 @@ function DivisionFormDialog({
   )
 }
 
-function DivisionEditDialog({
-  division,
-  grades,
-  groups,
-  onClose,
-  onSubmit,
-}: {
+type DivisionEditProps = {
   division: Division | null
   grades: Grade[]
   groups: RankingGroup[]
   onClose: () => void
   onSubmit: (patch: Partial<Division>) => Promise<void>
-}) {
-  const [label, setLabel] = useState("")
-  const [solveGrade, setSolveGrade] = useState<string>("")
-  const [groupId, setGroupId] = useState<string>("")
-  const [desc, setDesc] = useState("")
+}
+
+function DivisionEditDialog(props: DivisionEditProps) {
+  if (!props.division) return null
+  return <DivisionEditBody {...props} division={props.division} />
+}
+
+function DivisionEditBody({
+  division,
+  grades,
+  groups,
+  onClose,
+  onSubmit,
+}: Omit<DivisionEditProps, "division"> & { division: Division }) {
+  const [label, setLabel] = useState(division.label)
+  const [solveGrade, setSolveGrade] = useState<string>(division.solve_grade)
+  const [groupId, setGroupId] = useState<string>(division.ranking_group_id ?? "")
+  const [desc, setDesc] = useState(division.desc_text)
   const [saving, setSaving] = useState(false)
-
-  useEffect(() => {
-    if (division) {
-      setLabel(division.label)
-      setSolveGrade(division.solve_grade)
-      setGroupId(division.ranking_group_id ?? "")
-      setDesc(division.desc_text)
-    }
-  }, [division])
-
-  if (!division) return null
 
   const dirty =
     label.trim() !== division.label ||
@@ -1616,14 +1615,9 @@ function SignupPreview({
   gradeMap: Record<string, Grade>
   groupMap: Record<string, RankingGroup>
 }) {
-  const [previewGradeId, setPreviewGradeId] = useState<string>(
+  const [selectedGradeId, setPreviewGradeId] = useState<string>(
     grades[0]?.id ?? "",
   )
-  useEffect(() => {
-    if (!grades.find((g) => g.id === previewGradeId)) {
-      setPreviewGradeId(grades[0]?.id ?? "")
-    }
-  }, [grades, previewGradeId])
 
   if (grades.length === 0 || divisions.length === 0) {
     return (
@@ -1633,6 +1627,10 @@ function SignupPreview({
     )
   }
 
+  // grades가 변하며 selectedGradeId가 stale해질 수 있어 render에서 정규화.
+  const previewGradeId = grades.some((g) => g.id === selectedGradeId)
+    ? selectedGradeId
+    : grades[0].id
   const previewGrade = gradeMap[previewGradeId]
   const recommendedSet = recMap.get(previewGradeId) ?? new Set<string>()
   const activeDivisions = divisions.filter((d) => d.active)

@@ -330,30 +330,23 @@ export function ScheduleEditor({
         />
       </Section>
 
-      <Section title="전체 시간">
-        <div className="grid sm:grid-cols-2 gap-3">
-          <TimePickerInput
-            label="시작 시각"
-            value={settings.start_time}
-            onChange={(v) => updateSettings({ start_time: v })}
-            nullable
-            defaultValue="09:30"
-            presets={["09:00", "09:30", "10:00", "10:30"]}
-          />
-          <TimePickerInput
-            label="종료 시각 (안내용)"
-            value={settings.end_time}
-            onChange={(v) => updateSettings({ end_time: v })}
-            nullable
-            defaultValue="16:50"
-            presets={["16:00", "16:30", "17:00", "17:30", "18:00"]}
-            hint={
-              timeline.computedEndLabel
-                ? `자동 계산: ${timeline.computedEndLabel}`
-                : undefined
-            }
-          />
-        </div>
+      <Section
+        title="시작 시각"
+        subtitle="종료 시각은 시작 + 타임라인에서 자동 계산돼요"
+      >
+        <TimePickerInput
+          label="시작 시각"
+          value={settings.start_time}
+          onChange={(v) => updateSettings({ start_time: v })}
+          nullable
+          defaultValue="09:30"
+          presets={["09:00", "09:30", "10:00", "10:30"]}
+          hint={
+            timeline.endLabel
+              ? `자동 계산된 종료: ${timeline.endLabel}`
+              : undefined
+          }
+        />
       </Section>
 
       <Section
@@ -381,6 +374,7 @@ export function ScheduleEditor({
           </div>
         ) : (
           <DndContext
+            id="schedule-stops"
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
@@ -438,10 +432,10 @@ export function ScheduleEditor({
           </DndContext>
         )}
 
-        {timeline.computedEndLabel && (
+        {timeline.endLabel && (
           <div className="mt-2 flex items-center gap-3 p-3 rounded-xl bg-ink-900 text-white">
             <span className="text-[10px] font-black uppercase tracking-wider w-12 shrink-0 num">
-              {timeline.computedEndLabel}
+              {timeline.endLabel}
             </span>
             <div className="flex-1 font-black text-sm">종료</div>
           </div>

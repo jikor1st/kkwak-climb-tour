@@ -23,19 +23,25 @@ export default async function AdminWallsPage() {
     loadDifficultySystem(),
   ])
 
-  // 모든 색을 노출 — 색을 새로 추가하면 그 즉시 벽별 문제 수 입력 컬럼이
-  // 따라온다. 부(division)가 아직 그 색을 안 풀어도 색만 단독으로 등록 가능.
+  // 참가 부가 푸는 색만 노출. 회색처럼 "평소 푸는 색"이지만 어떤 부도
+  // solve_grade로 쓰지 않는 색은 컬럼에서 제외한다 — 운영진이 입력해야 할 수가
+  // 명확하게 좁혀진다. 새 부를 추가/활성화하면 해당 색이 바로 따라 노출.
   const divisionLabelByGrade: Record<string, string> = {}
   for (const d of system.divisions) {
+    if (!d.active) continue
     divisionLabelByGrade[d.solve_grade] = d.label
   }
+
+  const visibleGrades = system.grades.filter(
+    (g) => divisionLabelByGrade[g.id],
+  )
 
   return (
     <WallsEditor
       gyms={gymsRes.data ?? []}
       walls={wallsRes.data ?? []}
       gradeCounts={gcRes.data ?? []}
-      grades={system.grades.map((g) => ({
+      grades={visibleGrades.map((g) => ({
         key: g.id,
         label: g.label,
         color: g.color_hex,

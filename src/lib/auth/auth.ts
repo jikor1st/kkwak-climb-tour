@@ -15,7 +15,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         try {
           const supabase = createServerClient()
 
-          // users 테이블에 upsert
+          // ON CONFLICT DO NOTHING — 신규 유저면 INSERT, 기존이면 무시.
+          // 기존 nickname을 카카오 이름으로 덮어쓰면 /onboarding/name에서
+          // 직접 입력한 이름이 사라지므로 보존한다.
           const { error } = await supabase
             .from('users')
             .upsert(
@@ -23,10 +25,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 kakao_id: account.providerAccountId,
                 nickname: user.name || '',
               },
-              {
-                onConflict: 'kakao_id',
-                ignoreDuplicates: false,
-              }
+              { onConflict: 'kakao_id', ignoreDuplicates: true },
             )
 
           if (error) {

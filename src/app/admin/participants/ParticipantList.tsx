@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import type { Grade, Division } from "@/lib/contest/grades"
 import { Modal } from "@/components/Modal"
 import { ConfirmDialog } from "@/components/ConfirmDialog"
@@ -573,15 +573,7 @@ const TYPE_OPTIONS = [
   { value: "guest", label: "게스트" },
 ] as const
 
-function ParticipantEditDialog({
-  open,
-  row,
-  grades,
-  divisions,
-  gradeMap,
-  onClose,
-  onSave,
-}: {
+type EditDialogProps = {
   open: boolean
   row: ParticipantRow | null
   grades: Grade[]
@@ -589,24 +581,26 @@ function ParticipantEditDialog({
   gradeMap: Record<string, Grade>
   onClose: () => void
   onSave: (patch: EditPatch) => Promise<void> | void
-}) {
-  const [name, setName] = useState("")
-  const [grade, setGrade] = useState<string>("")
-  const [div, setDiv] = useState<string>("")
-  const [type, setType] = useState<string>("")
+}
+
+function ParticipantEditDialog(props: EditDialogProps) {
+  if (!props.open || !props.row) return null
+  return <EditDialogBody {...props} row={props.row} />
+}
+
+function EditDialogBody({
+  row,
+  grades,
+  divisions,
+  gradeMap,
+  onClose,
+  onSave,
+}: Omit<EditDialogProps, "open"> & { row: ParticipantRow }) {
+  const [name, setName] = useState(row.display_name)
+  const [grade, setGrade] = useState<string>(row.main_grade)
+  const [div, setDiv] = useState<string>(row.division_id)
+  const [type, setType] = useState<string>(row.participant_type)
   const [saving, setSaving] = useState(false)
-
-  useEffect(() => {
-    if (open && row) {
-      setName(row.display_name)
-      setGrade(row.main_grade)
-      setDiv(row.division_id)
-      setType(row.participant_type)
-      setSaving(false)
-    }
-  }, [open, row])
-
-  if (!row) return null
 
   const dirty =
     name.trim() !== row.display_name ||
@@ -631,7 +625,7 @@ function ParticipantEditDialog({
   }
 
   return (
-    <Modal open={open} onClose={onClose} ariaLabel="참가자 정보 수정">
+    <Modal open onClose={onClose} ariaLabel="참가자 정보 수정">
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
           <h2 className="text-lg font-black">참가자 정보 수정</h2>

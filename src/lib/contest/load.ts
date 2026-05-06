@@ -22,7 +22,6 @@ export type GymData = {
 
 export type ContestSettings = {
   start_time: string | null
-  end_time: string | null
   default_gym_minutes: number
   lunch_minutes: number
   lunch_start_time: string | null
@@ -100,7 +99,7 @@ export async function loadContestData(
       supabase
         .from("contest_settings")
         .select(
-          "start_time, end_time, default_gym_minutes, lunch_minutes, lunch_start_time, contest_date, signup_notice, entry_fee, kakaopay_link",
+          "start_time, default_gym_minutes, lunch_minutes, lunch_start_time, contest_date, signup_notice, entry_fee, kakaopay_link",
         )
         .eq("id", 1)
         .maybeSingle(),
@@ -125,7 +124,6 @@ export async function loadContestData(
   const defaultMinutes = settingsRow?.default_gym_minutes ?? 45
   const settings: ContestSettings = {
     start_time: settingsRow?.start_time ?? null,
-    end_time: settingsRow?.end_time ?? null,
     default_gym_minutes: defaultMinutes,
     lunch_minutes: settingsRow?.lunch_minutes ?? 60,
     lunch_start_time: settingsRow?.lunch_start_time ?? null,

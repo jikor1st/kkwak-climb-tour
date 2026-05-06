@@ -16,8 +16,12 @@ type Props = {
   onCancel: () => void
 }
 
-export function TextInputDialog({
-  open,
+export function TextInputDialog(props: Props) {
+  if (!props.open) return null
+  return <Body {...props} />
+}
+
+function Body({
   title,
   subtitle,
   placeholder,
@@ -27,19 +31,14 @@ export function TextInputDialog({
   validate,
   onConfirm,
   onCancel,
-}: Props) {
+}: Omit<Props, "open">) {
   const [value, setValue] = useState(initialValue)
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (open) {
-      setValue(initialValue)
-      setError(null)
-      // focus after mount
-      setTimeout(() => inputRef.current?.focus(), 0)
-    }
-  }, [open, initialValue])
+    inputRef.current?.focus()
+  }, [])
 
   function submit() {
     const trimmed = value.trim()
@@ -58,7 +57,7 @@ export function TextInputDialog({
   }
 
   return (
-    <Modal open={open} onClose={onCancel} ariaLabel={title} size="sm">
+    <Modal open onClose={onCancel} ariaLabel={title} size="sm">
       <div className="flex items-start justify-between gap-3 mb-3">
         <div>
           <h2 className="text-lg font-black">{title}</h2>

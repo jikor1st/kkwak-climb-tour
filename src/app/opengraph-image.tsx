@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og"
 import { createServerClient } from "@/lib/supabase/server"
+import { buildTimeline } from "@/lib/contest/schedule"
 
 export const alt = "꽉크루 볼구력 대회 2026"
 export const size = { width: 1200, height: 630 }
@@ -43,22 +44,59 @@ export default async function Image() {
 
   try {
     const supabase = createServerClient()
-    const [csRes, gymsRes] = await Promise.all([
+    const [csRes, gymsRes, durRes, breaksRes] = await Promise.all([
       supabase
         .from("contest_settings")
-        .select("contest_date, start_time, end_time")
+        .select(
+          "contest_date, start_time, default_gym_minutes, lunch_minutes, lunch_start_time",
+        )
         .eq("id", 1)
         .maybeSingle(),
       supabase
         .from("gyms")
-        .select("name, display_order")
+        .select("id, name, display_order")
         .eq("active", true)
         .order("display_order"),
+      supabase.from("gym_durations").select("gym_id, duration_minutes"),
+      supabase
+        .from("schedule_breaks")
+        .select("id, name, duration_minutes, after_gym_id, display_order")
+        .order("display_order"),
     ])
-    contestDate = csRes.data?.contest_date ?? null
-    startTime = csRes.data?.start_time ?? null
-    endTime = csRes.data?.end_time ?? null
+    const cs = csRes.data
+    contestDate = cs?.contest_date ?? null
+    startTime = cs?.start_time ?? null
     venues = (gymsRes.data ?? []).map((g) => g.name)
+
+    const defaultMinutes = cs?.default_gym_minutes ?? 45
+    const durMap = new Map(
+      (durRes.data ?? []).map((d) => [d.gym_id, d.duration_minutes]),
+    )
+    const timelineGyms = (gymsRes.data ?? []).map((g) => ({
+      id: g.id,
+      name: g.name,
+      display_order: g.display_order,
+      duration_minutes: durMap.get(g.id) ?? defaultMinutes,
+    }))
+    const breaks = (breaksRes.data ?? []).map((b) => ({
+      id: b.id,
+      name: b.name,
+      duration_minutes: b.duration_minutes,
+      after_gym_id: b.after_gym_id ?? null,
+      display_order: b.display_order ?? 0,
+    }))
+    const timeline = buildTimeline(
+      {
+        start_time: startTime,
+        default_gym_minutes: defaultMinutes,
+        lunch_minutes: cs?.lunch_minutes ?? 60,
+        lunch_start_time: cs?.lunch_start_time ?? null,
+        contest_date: contestDate,
+      },
+      timelineGyms,
+      breaks,
+    )
+    endTime = timeline.endLabel
   } catch (e) {
     console.error("[og-image] supabase fetch error:", e)
   }

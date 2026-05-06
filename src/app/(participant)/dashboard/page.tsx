@@ -34,8 +34,8 @@ export default async function DashboardPage() {
   )
   const contestDateLabel = formatContestDate(contest.settings.contest_date)
   const startEndLabel =
-    timeline.startLabel && (timeline.endLabel ?? timeline.computedEndLabel)
-      ? `${timeline.startLabel} — ${timeline.endLabel ?? timeline.computedEndLabel}`
+    timeline.startLabel && timeline.endLabel
+      ? `${timeline.startLabel} — ${timeline.endLabel}`
       : null
   const scheduleSummary = [
     contestDateLabel !== "미정" ? contestDateLabel : null,
@@ -51,6 +51,10 @@ export default async function DashboardPage() {
   const today = todayDateStringKST()
   const contestOver =
     !!contest.settings.contest_date && contest.settings.contest_date < today
+  const daysUntil = contest.settings.contest_date
+    ? diffDaysKST(today, contest.settings.contest_date)
+    : null
+  const promoteTimeline = daysUntil === 0 || daysUntil === 1
   const paymentInfo = buildPaymentInfo(contest.settings)
   const primaryCta = !participant.paid
     ? {
@@ -77,6 +81,25 @@ export default async function DashboardPage() {
         timeline={timeline}
         contestDate={contest.settings.contest_date}
       />
+
+      {promoteTimeline && (
+        <section className="bg-surface border-2 border-accent/40 rounded-3xl p-5 sm:p-6 shadow-card">
+          <div className="flex items-baseline justify-between gap-3 mb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-accent">
+                {daysUntil === 0 ? "오늘 동선" : "내일 동선"}
+              </span>
+            </div>
+            <div className="text-xs text-ink-500 font-bold truncate num">
+              {scheduleSummary}
+            </div>
+          </div>
+          <TimelineList
+            timeline={timeline}
+            contestDate={contest.settings.contest_date}
+          />
+        </section>
+      )}
 
       {/* 2) 나 — 정체성 + 완등 비율 + 단일 주요 CTA */}
       <section className="relative overflow-hidden bg-surface border border-line rounded-3xl p-6 shadow-card">
@@ -235,21 +258,36 @@ export default async function DashboardPage() {
         )}
       </section>
 
-      {/* 4) 참고 — 전체 일정 */}
-      <section className="bg-surface border border-line rounded-2xl p-5 shadow-soft">
-        <div className="flex items-baseline justify-between gap-3 mb-4">
-          <h2 className="text-base font-black">전체 일정</h2>
-          <div className="text-xs text-ink-500 font-bold truncate num">
-            {scheduleSummary}
+      {!promoteTimeline && (
+        <section className="bg-surface border border-line rounded-2xl p-5 shadow-soft">
+          <div className="flex items-baseline justify-between gap-3 mb-4">
+            <h2 className="text-base font-black">전체 일정</h2>
+            <div className="text-xs text-ink-500 font-bold truncate num">
+              {scheduleSummary}
+            </div>
           </div>
-        </div>
-        <TimelineList
-          timeline={timeline}
-          contestDate={contest.settings.contest_date}
-        />
-      </section>
+          <TimelineList
+            timeline={timeline}
+            contestDate={contest.settings.contest_date}
+          />
+        </section>
+      )}
     </div>
   )
+}
+
+function diffDaysKST(today: string, target: string): number {
+  const a = Date.UTC(
+    Number(today.slice(0, 4)),
+    Number(today.slice(5, 7)) - 1,
+    Number(today.slice(8, 10)),
+  )
+  const b = Date.UTC(
+    Number(target.slice(0, 4)),
+    Number(target.slice(5, 7)) - 1,
+    Number(target.slice(8, 10)),
+  )
+  return Math.round((b - a) / 86400000)
 }
 
 const WEEKDAY_KO = ["일", "월", "화", "수", "목", "금", "토"]

@@ -3,6 +3,8 @@ import { requireAuth } from "@/lib/auth/guards"
 import { signOut } from "@/lib/auth/auth"
 import { ModeToggle } from "@/components/ModeToggle"
 import { BottomNav } from "@/components/BottomNav"
+import { AnnouncementBanner } from "@/components/AnnouncementBanner"
+import { createServerClient } from "@/lib/supabase/server"
 
 export default async function ParticipantLayout({
   children,
@@ -12,6 +14,22 @@ export default async function ParticipantLayout({
   const session = await requireAuth()
   const isAdmin = session.user.role === 'admin'
   const isParticipant = !!session.user.participant
+
+  const supabase = createServerClient()
+  const [settingsRes, hotRes] = await Promise.all([
+    supabase
+      .from("contest_settings")
+      .select("pinned_notice")
+      .eq("id", 1)
+      .maybeSingle(),
+    supabase
+      .from("hot_notices")
+      .select("id, body, updated_at")
+      .order("display_order")
+      .order("created_at"),
+  ])
+  const pinnedNotice = (settingsRes.data?.pinned_notice ?? "").trim()
+  const hotNotices = (hotRes.data ?? []).filter((n) => n.body.trim())
 
   return (
     <div className="min-h-screen bg-paper">
@@ -53,6 +71,18 @@ export default async function ParticipantLayout({
           </div>
         </div>
       </header>
+      {pinnedNotice && (
+        <AnnouncementBanner notice={pinnedNotice} variant="pinned" />
+      )}
+      {hotNotices.map((n) => (
+        <AnnouncementBanner
+          key={n.id}
+          variant="hot"
+          id={n.id}
+          notice={n.body}
+          updatedAt={n.updated_at}
+        />
+      ))}
       <main className={isParticipant ? "pb-32" : ""}>{children}</main>
       {isParticipant && <BottomNav />}
     </div>

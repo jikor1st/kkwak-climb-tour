@@ -44,6 +44,7 @@ export default async function AdminLayout({
             <NavLink href="/admin/participants">참가자</NavLink>
             <NavLink href="/admin/users">회원</NavLink>
             <NavLink href="/admin/schedule">일정</NavLink>
+            <NavLink href="/admin/announcement">공지</NavLink>
             <NavLink href="/admin/notice">결제안내</NavLink>
           </nav>
 

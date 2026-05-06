@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
+import { isIOS as detectIOS } from "@/lib/utils/platform"
 
 // Chrome/Android에서 firing되는 PWA 설치 prompt 이벤트.
 // 표준 타입은 아직 lib.dom에 없어 직접 정의.
@@ -21,7 +22,9 @@ const HIDE_PATH_PREFIXES = ["/login", "/onboarding", "/post-login", "/signup"]
 export function InstallPrompt() {
   const pathname = usePathname() ?? ""
   const [show, setShow] = useState(false)
-  const [platform, setPlatform] = useState<"chrome" | "ios" | null>(null)
+  const [platform, setPlatform] = useState<"chrome" | "ios" | null>(() =>
+    typeof window !== "undefined" && detectIOS() ? "ios" : null,
+  )
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null)
 
@@ -44,14 +47,9 @@ export function InstallPrompt() {
       // localStorage 비활성 환경이면 그냥 노출
     }
 
-    const isIOS =
-      /iPad|iPhone|iPod/i.test(navigator.userAgent) &&
-      !(window as unknown as { MSStream?: unknown }).MSStream
-
     let timer: ReturnType<typeof setTimeout> | null = null
 
-    if (isIOS) {
-      setPlatform("ios")
+    if (detectIOS()) {
       timer = setTimeout(() => setShow(true), SHOW_AFTER_MS)
       return () => {
         if (timer) clearTimeout(timer)

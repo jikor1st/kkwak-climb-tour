@@ -13,23 +13,24 @@ type Props = {
   onCancel: () => void
 }
 
-export function NumberInputDialog({
-  open,
+export function NumberInputDialog(props: Props) {
+  if (!props.open) return null
+  return <Body {...props} />
+}
+
+function Body({
   title,
   subtitle,
   initialValue,
   total,
   onConfirm,
   onCancel,
-}: Props) {
-  const [value, setValue] = useState(initialValue)
+}: Omit<Props, "open">) {
+  const [value, setValue] = useState(() =>
+    Math.max(0, Math.min(initialValue, total)),
+  )
 
   useEffect(() => {
-    if (open) setValue(Math.max(0, Math.min(initialValue, total)))
-  }, [open, initialValue, total])
-
-  useEffect(() => {
-    if (!open) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Enter") {
         e.preventDefault()
@@ -54,7 +55,7 @@ export function NumberInputDialog({
     }
     document.addEventListener("keydown", onKey)
     return () => document.removeEventListener("keydown", onKey)
-  }, [open, value, total, onConfirm])
+  }, [value, total, onConfirm])
 
   const ratio = total > 0 ? Math.round((value / total) * 100) : 0
   const presets = total > 0
@@ -66,7 +67,7 @@ export function NumberInputDialog({
     : []
 
   return (
-    <Modal open={open} onClose={onCancel} ariaLabel={title}>
+    <Modal open onClose={onCancel} ariaLabel={title}>
       <div className="flex items-start justify-between gap-3 mb-1">
         <div>
           <h2 className="text-lg font-black">{title}</h2>

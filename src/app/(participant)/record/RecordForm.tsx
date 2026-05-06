@@ -239,7 +239,7 @@ export function RecordForm({
         <div className="text-xs text-ink-500 uppercase tracking-wider mb-2 font-bold">
           지점 선택
         </div>
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 -mx-5 px-5">
+        <div className="flex flex-wrap gap-2 pb-1">
           {gyms.map((g) => {
             const prog = gymProgress.find((p) => p.id === g.id)!
             const selected = g.id === activeGymId

@@ -279,7 +279,7 @@ export function WallsEditor({
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-5 pt-6 pb-32">
+    <div className="max-w-6xl mx-auto px-5 pt-6 pb-32">
       {/* Page header */}
       <div className="flex items-end justify-between gap-3 mb-5 flex-wrap">
         <div>
@@ -387,9 +387,9 @@ export function WallsEditor({
                 <>
                   {/* Header row (desktop) */}
                   <div
-                    className="hidden sm:grid gap-3 px-5 py-2.5 text-[10px] uppercase tracking-wider font-black text-ink-500 border-b border-line"
+                    className="hidden lg:grid gap-3 px-5 py-2.5 text-[10px] uppercase tracking-wider font-black text-ink-500 border-b border-line"
                     style={{
-                      gridTemplateColumns: `minmax(0,1fr) repeat(${GRADES.length}, 8.5rem) 2.5rem`,
+                      gridTemplateColumns: `minmax(8rem,1.5fr) repeat(${GRADES.length}, 7rem) 2.5rem`,
                     }}
                   >
                     <div>벽 이름</div>
@@ -538,9 +538,9 @@ function WallRow({
   return (
     <li className="px-4 sm:px-5 py-3 hover:bg-mute/30 transition group">
       <div
-        className="flex flex-col sm:grid gap-3 sm:items-center"
+        className="flex flex-col lg:grid gap-3 lg:items-center"
         style={{
-          gridTemplateColumns: `minmax(0,1fr) repeat(${grades.length}, 8.5rem) 2.5rem`,
+          gridTemplateColumns: `minmax(8rem,1.5fr) repeat(${grades.length}, 7rem) 2.5rem`,
         }}
       >
         <input
@@ -553,7 +553,7 @@ function WallRow({
 
         {/* 모바일: 색마다 한 행. 라벨 + Stepper 가 가로로 배치되어 색이 늘어도
             stepper 폭이 안정적으로 유지된다. */}
-        <div className="flex flex-col gap-1.5 sm:hidden">
+        <div className="flex flex-col gap-1.5 lg:hidden">
           {grades.map((g) => {
             const value = counts[`${wall.id}:${g.key}`] ?? 0
             return (
@@ -588,7 +588,7 @@ function WallRow({
         </div>
 
         {/* 데스크탑: 부모 그리드 트랙으로 직접 배치 */}
-        <div className="hidden sm:contents">
+        <div className="hidden lg:contents">
           {grades.map((g) => (
             <Stepper
               key={g.key}
@@ -602,7 +602,7 @@ function WallRow({
         <button
           type="button"
           onClick={onDelete}
-          className="hidden sm:flex w-9 h-9 rounded-lg text-ink-300 hover:text-accent hover:bg-accent-soft items-center justify-center transition shrink-0 ml-auto"
+          className="hidden lg:flex w-9 h-9 rounded-lg text-ink-300 hover:text-accent hover:bg-accent-soft items-center justify-center transition shrink-0 ml-auto"
           aria-label="삭제"
           title="삭제"
         >
@@ -611,7 +611,7 @@ function WallRow({
         <button
           type="button"
           onClick={onDelete}
-          className="sm:hidden text-xs font-bold text-ink-500 hover:text-accent transition py-2 mt-1 border-t border-line"
+          className="lg:hidden text-xs font-bold text-ink-500 hover:text-accent transition py-2 mt-1 border-t border-line"
         >
           ✕ 이 벽 삭제
         </button>

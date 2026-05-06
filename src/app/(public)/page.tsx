@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { auth } from '@/lib/auth/auth'
 import { createServerClient } from '@/lib/supabase/server'
-import { buildTimeline, formatHHMM } from '@/lib/contest/schedule'
+import { buildTimeline } from '@/lib/contest/schedule'
 import { CurrentScheduleStatus } from '@/components/CurrentScheduleStatus'
 import { loadDifficultySystem, type Grade, type Division } from '@/lib/contest/grades'
 
@@ -63,7 +63,7 @@ export default async function LandingPage({
       supabase
         .from('contest_settings')
         .select(
-          'contest_date, start_time, end_time, default_gym_minutes, lunch_minutes, lunch_start_time, entry_fee',
+          'contest_date, start_time, default_gym_minutes, lunch_minutes, lunch_start_time, entry_fee',
         )
         .eq('id', 1)
         .maybeSingle(),
@@ -89,8 +89,6 @@ export default async function LandingPage({
 
   const cs = csRes.data
   const contestDate = cs?.contest_date ?? null
-  const startLabel = formatHHMM(cs?.start_time ?? null)
-  const endLabel = formatHHMM(cs?.end_time ?? null)
   const participantCount = partsCountRes.count ?? 0
   const paidCount = paidCountRes.count ?? 0
   const entryFee = cs?.entry_fee ?? 10000
@@ -115,7 +113,6 @@ export default async function LandingPage({
   const timeline = buildTimeline(
     {
       start_time: cs?.start_time ?? null,
-      end_time: cs?.end_time ?? null,
       default_gym_minutes: defaultMinutes,
       lunch_minutes: cs?.lunch_minutes ?? 60,
       lunch_start_time: cs?.lunch_start_time ?? null,
@@ -124,6 +121,8 @@ export default async function LandingPage({
     timelineGyms,
     breaks,
   )
+  const startLabel = timeline.startLabel
+  const endLabel = timeline.endLabel
   const dateBadge = formatDateBadge(contestDate)
   const dateBig = formatDateBig(contestDate)
   const dateSub =

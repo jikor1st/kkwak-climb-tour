@@ -12,7 +12,7 @@ export default async function AdminSchedulePage() {
     supabase
       .from("contest_settings")
       .select(
-        "contest_date, start_time, end_time, default_gym_minutes, lunch_minutes, lunch_start_time",
+        "contest_date, start_time, default_gym_minutes, lunch_minutes, lunch_start_time",
       )
       .eq("id", 1)
       .maybeSingle(),
@@ -33,7 +33,6 @@ export default async function AdminSchedulePage() {
   const row = settingsRes.data
   const settings = {
     start_time: row?.start_time ?? null,
-    end_time: row?.end_time ?? null,
     default_gym_minutes: row?.default_gym_minutes ?? 45,
     lunch_minutes: row?.lunch_minutes ?? 60,
     lunch_start_time: row?.lunch_start_time ?? null,

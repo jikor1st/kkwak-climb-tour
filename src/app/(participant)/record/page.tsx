@@ -2,6 +2,7 @@ import Link from "next/link"
 import { requireParticipant } from "@/lib/auth/guards"
 import { loadContestData, buildPaymentInfo } from "@/lib/contest/load"
 import { isContestOpen } from "@/lib/contest/timeline-now"
+import { buildTimeline } from "@/lib/contest/schedule"
 import { RecordForm } from "./RecordForm"
 
 export const dynamic = "force-dynamic"
@@ -24,11 +25,24 @@ export default async function RecordPage({
 
   const noGyms = contest.gyms.length === 0
   const noWalls = contest.totalCount === 0
-  const window = isContestOpen({
-    contest_date: contest.settings.contest_date,
-    start_time: contest.settings.start_time,
-    end_time: contest.settings.end_time,
-  })
+  const timeline = buildTimeline(
+    {
+      start_time: contest.settings.start_time,
+      default_gym_minutes: contest.settings.default_gym_minutes,
+      lunch_minutes: contest.settings.lunch_minutes,
+      lunch_start_time: contest.settings.lunch_start_time,
+      contest_date: contest.settings.contest_date,
+    },
+    contest.gyms,
+    contest.breaks,
+  )
+  const window = isContestOpen(
+    {
+      contest_date: contest.settings.contest_date,
+      start_time: contest.settings.start_time,
+    },
+    timeline.endLabel,
+  )
 
   const lockReason = !participant.paid
     ? {
