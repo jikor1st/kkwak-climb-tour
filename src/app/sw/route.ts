@@ -64,6 +64,54 @@ self.addEventListener('message', (event) => {
   }
 });
 
+// 웹 푸시 수신. 페이로드 JSON: { title, body, url?, tag? }
+self.addEventListener('push', (event) => {
+  let payload = { title: '꽉크루', body: '새 공지가 도착했어요', url: '/dashboard', tag: 'kct-default' };
+  if (event.data) {
+    try {
+      const parsed = event.data.json();
+      payload = { ...payload, ...parsed };
+    } catch (e) {
+      try { payload.body = event.data.text(); } catch (_) {}
+    }
+  }
+  event.waitUntil(
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      tag: payload.tag,
+      // 같은 tag로 들어와도 새 알림이 시각/소리 트리거하도록.
+      renotify: true,
+      data: { url: payload.url || '/dashboard' },
+    }),
+  );
+});
+
+// 알림 클릭 — 이미 열린 탭이 있으면 포커스, 없으면 새 창.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = (event.notification.data && event.notification.data.url) || '/dashboard';
+  event.waitUntil((async () => {
+    const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of all) {
+      try {
+        const url = new URL(client.url);
+        if (url.origin === self.location.origin) {
+          await client.focus();
+          if ('navigate' in client) {
+            try { await client.navigate(target); } catch (_) {}
+          }
+          return;
+        }
+      } catch (_) {}
+    }
+    if (self.clients.openWindow) {
+      await self.clients.openWindow(target);
+    }
+  })());
+});
+
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;

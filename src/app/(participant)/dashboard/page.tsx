@@ -9,6 +9,7 @@ import { TimelineList } from "@/components/TimelineList"
 import { GymProgressList } from "@/components/GymProgressList"
 import { CountUpNumber } from "@/components/CountUpNumber"
 import { PaymentInfoCard } from "@/components/PaymentInfoCard"
+import { EnableNotifications } from "@/components/EnableNotifications"
 
 export const dynamic = "force-dynamic"
 
@@ -81,6 +82,9 @@ export default async function DashboardPage() {
         timeline={timeline}
         contestDate={contest.settings.contest_date}
       />
+
+      {/* 알림 권한 요청 — 미구독·미차단 상태에서만 자동 노출 (자체 분기) */}
+      <EnableNotifications />
 
       {promoteTimeline && (
         <section className="bg-surface border-2 border-accent/40 rounded-3xl p-5 sm:p-6 shadow-card">

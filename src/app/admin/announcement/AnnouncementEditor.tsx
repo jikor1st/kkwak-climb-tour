@@ -96,6 +96,36 @@ export function AnnouncementEditor({
     }
   }
 
+  async function notifyHot(id: string) {
+    if (
+      !confirm(
+        "이 핫 공지를 모든 알림 구독자에게 푸시로 발송할까요?\n\n동일 공지를 여러 번 보내면 사용자가 피로감을 느낄 수 있어요.",
+      )
+    ) {
+      return
+    }
+    try {
+      const res = await fetch(`/api/admin/hot-notices/${id}/notify`, {
+        method: "POST",
+      })
+      const data = (await res.json().catch(() => ({}))) as {
+        sent?: number
+        pruned?: number
+        failed?: number
+        error?: string
+      }
+      if (!res.ok) throw new Error(data.error ?? "발송 실패")
+      const sent = data.sent ?? 0
+      if (sent === 0) {
+        showToast("아직 알림 구독자가 없어요")
+      } else {
+        showToast(`${sent}명에게 알림을 보냈어요`)
+      }
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "발송 실패")
+    }
+  }
+
   async function deleteHot(id: string) {
     if (!confirm("이 핫 공지를 삭제할까요?")) return
     try {
@@ -185,6 +215,7 @@ export function AnnouncementEditor({
               notice={n}
               onSave={(body) => updateHot(n.id, body)}
               onDelete={() => deleteHot(n.id)}
+              onNotify={() => notifyHot(n.id)}
             />
           ))}
           {hotNotices.length === 0 && (
@@ -232,13 +263,16 @@ function HotNoticeRow({
   notice,
   onSave,
   onDelete,
+  onNotify,
 }: {
   notice: HotNotice
   onSave: (body: string) => Promise<boolean>
   onDelete: () => void
+  onNotify: () => Promise<void>
 }) {
   const [body, setBody] = useState(notice.body)
   const [saving, setSaving] = useState(false)
+  const [notifying, setNotifying] = useState(false)
 
   const dirty = body !== notice.body
 
@@ -247,6 +281,15 @@ function HotNoticeRow({
     setSaving(true)
     await onSave(body)
     setSaving(false)
+  }
+
+  async function notify() {
+    setNotifying(true)
+    try {
+      await onNotify()
+    } finally {
+      setNotifying(false)
+    }
   }
 
   return (
@@ -269,6 +312,29 @@ function HotNoticeRow({
             className="px-3 py-1.5 rounded-lg text-[11px] font-black text-ink-500 hover:text-accent hover:bg-accent-soft transition"
           >
             삭제
+          </button>
+          <button
+            type="button"
+            onClick={notify}
+            disabled={notifying || dirty}
+            title={dirty ? "먼저 저장한 뒤 발송해주세요" : "지금 알림 보내기"}
+            className="px-3 py-1.5 rounded-lg bg-ink-900 text-white font-black text-[11px] shadow-pop hover:bg-ink-700 transition disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none flex items-center gap-1"
+          >
+            <svg
+              width="11"
+              height="11"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+            </svg>
+            {notifying ? "발송 중..." : "알림 발송"}
           </button>
           <button
             type="button"
