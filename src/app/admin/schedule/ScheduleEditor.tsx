@@ -542,15 +542,19 @@ function SortableRow({
               type="button"
               {...attributes}
               {...listeners}
-              className="w-7 h-9 rounded-md text-ink-300 hover:text-ink-700 hover:bg-mute transition flex items-center justify-center cursor-grab active:cursor-grabbing"
+              className="w-7 h-9 rounded-md text-ink-300 hover:text-ink-700 hover:bg-mute transition flex items-center justify-center cursor-grab active:cursor-grabbing shrink-0"
               aria-label="순서 변경"
             >
               ⋮⋮
             </button>
-            <span className="text-[10px] font-black text-ink-500 uppercase tracking-wider w-12 shrink-0 num">
-              {row.time?.start ?? "--:--"}
-            </span>
-            <div className="flex-1 font-black text-sm truncate">{row.gym.name}</div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 flex-1 min-w-0">
+              <span className="text-[10px] font-black text-ink-500 uppercase tracking-wider sm:w-12 shrink-0 num leading-tight">
+                {row.time?.start ?? "--:--"}
+              </span>
+              <div className="font-black text-sm break-keep wrap-break-word leading-snug sm:flex-1 sm:min-w-0">
+                {row.gym.name}
+              </div>
+            </div>
             <DurationStepper
               value={row.gym.duration_minutes}
               onChange={(n) => onUpdateGymMinutes?.(n)}
@@ -579,22 +583,24 @@ function SortableRow({
           type="button"
           {...attributes}
           {...listeners}
-          className="w-7 h-9 rounded-md text-accent/60 hover:text-accent hover:bg-white/40 transition flex items-center justify-center cursor-grab active:cursor-grabbing"
+          className="w-7 h-9 rounded-md text-accent/60 hover:text-accent hover:bg-white/40 transition flex items-center justify-center cursor-grab active:cursor-grabbing shrink-0"
           aria-label="순서 변경"
         >
           ⋮⋮
         </button>
-        <span className="text-[10px] font-black text-accent uppercase tracking-wider w-12 shrink-0 num">
-          {row.time?.start ?? "--:--"}
-        </span>
-        <button
-          type="button"
-          onClick={onRenameBreak}
-          className="flex-1 text-left font-black text-sm truncate hover:underline"
-          title="이름 변경"
-        >
-          {row.break.name}
-        </button>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 flex-1 min-w-0">
+          <span className="text-[10px] font-black text-accent uppercase tracking-wider sm:w-12 shrink-0 num leading-tight">
+            {row.time?.start ?? "--:--"}
+          </span>
+          <button
+            type="button"
+            onClick={onRenameBreak}
+            className="text-left font-black text-sm break-keep wrap-break-word leading-snug hover:underline sm:flex-1 sm:min-w-0"
+            title="이름 변경"
+          >
+            {row.break.name}
+          </button>
+        </div>
         <DurationStepper
           value={row.break.duration_minutes}
           onChange={(n) => onUpdateBreakMinutes?.(n)}
@@ -603,7 +609,7 @@ function SortableRow({
         <button
           type="button"
           onClick={onDeleteBreak}
-          className="w-7 h-7 rounded-md text-accent/60 hover:text-accent hover:bg-white/40 flex items-center justify-center transition"
+          className="w-7 h-7 rounded-md text-accent/60 hover:text-accent hover:bg-white/40 flex items-center justify-center transition shrink-0"
           aria-label="삭제"
         >
           ✕
@@ -628,7 +634,7 @@ function DurationStepper({
     ? "bg-white/40 hover:bg-white text-accent"
     : "bg-mute hover:bg-line text-ink-700"
   return (
-    <div className={`flex items-center rounded-lg ${accent ? "bg-white/30" : "bg-mute"}`}>
+    <div className={`flex items-center rounded-lg shrink-0 ${accent ? "bg-white/30" : "bg-mute"}`}>
       <button
         type="button"
         onClick={dec}
@@ -638,11 +644,12 @@ function DurationStepper({
         −
       </button>
       <span
-        className={`px-2 text-xs font-black num min-w-[3ch] text-center ${
+        className={`px-1.5 sm:px-2 text-xs font-black num min-w-[2.5ch] sm:min-w-[3ch] text-center tabular-nums ${
           accent ? "text-accent" : "text-ink-900"
         }`}
       >
-        {value}분
+        {value}
+        <span className="hidden sm:inline">분</span>
       </span>
       <button
         type="button"
