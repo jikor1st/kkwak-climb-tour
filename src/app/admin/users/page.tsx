@@ -10,11 +10,12 @@ type RawUser = {
   nickname: string
   role: string
   created_at: string
+  // participants.user_id 의 unique 제약 때문에 PostgREST 가 1:1 로 감지해 객체로 돌려준다.
   participant: {
     id: string
     display_name: string
     paid: boolean
-  }[] | null
+  } | null
 }
 
 export default async function AdminUsersPage() {
@@ -39,11 +40,11 @@ export default async function AdminUsersPage() {
     nickname: u.nickname,
     role: u.role === "admin" ? "admin" : "participant",
     created_at: u.created_at,
-    participant: u.participant?.[0]
+    participant: u.participant
       ? {
-          id: u.participant[0].id,
-          display_name: u.participant[0].display_name,
-          paid: !!u.participant[0].paid,
+          id: u.participant.id,
+          display_name: u.participant.display_name,
+          paid: !!u.participant.paid,
         }
       : null,
   }))
